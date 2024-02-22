@@ -27,12 +27,11 @@
 #include <type_traits>
 #include <tuple>
 
-struct reflect_STRUCT { reflect_STRUCT* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
-
+struct  REFLECT_STRUCT { REFLECT_STRUCT* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 #define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
 /**
- * Minimal static reflection library
+ * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect)
  */
 namespace reflect::inline v1_0_0 {
 namespace detail {
@@ -59,19 +58,19 @@ template<auto  V> [[nodiscard]] consteval auto function_name() noexcept -> std::
 template<class T> [[nodiscard]] consteval auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
 struct type_name_info {
-  static constexpr auto name = function_name<reflect_STRUCT>();
-  static constexpr auto begin = name.find("reflect_STRUCT");
-  static constexpr auto end = name.substr(begin+std::size(std::string_view{"reflect_STRUCT"}));
+  static constexpr auto name = function_name<REFLECT_STRUCT>();
+  static constexpr auto begin = name.find("REFLECT_STRUCT");
+  static constexpr auto end = name.substr(begin+std::size(std::string_view{"REFLECT_STRUCT"}));
 };
 
 struct enum_name_info {
-  static constexpr auto name = function_name<reflect_STRUCT::ENUM::VALUE>();
-  static constexpr auto begin = name[name.find("reflect_STRUCT::ENUM::VALUE")-1];
-  static constexpr auto end = name.substr(name.find("reflect_STRUCT::ENUM::VALUE")+std::size(std::string_view{"reflect_STRUCT::ENUM::VALUE"}));
+  static constexpr auto name = function_name<REFLECT_STRUCT::ENUM::VALUE>();
+  static constexpr auto begin = name[name.find("REFLECT_STRUCT::ENUM::VALUE")-1];
+  static constexpr auto end = name.substr(name.find("REFLECT_STRUCT::ENUM::VALUE")+std::size(std::string_view{"REFLECT_STRUCT::ENUM::VALUE"}));
 };
 
 struct member_name_info {
-  static constexpr auto name = function_name<ptr{&ext<reflect_STRUCT>.MEMBER}>();
+  static constexpr auto name = function_name<ptr{&ext<REFLECT_STRUCT>.MEMBER}>();
   static constexpr auto begin = name[name.find("MEMBER")-1];
   static constexpr auto end = name.substr(name.find("MEMBER")+std::size(std::string_view{"MEMBER"}));
 };

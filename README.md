@@ -212,8 +212,6 @@ assert(4 == b.a and 0 == b.c);
 
 ```cpp
 template <class T, std::size_t Size> struct fixed_string;
-template <class T, std::size_t Size>
-fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
 ```
 
 ```cpp

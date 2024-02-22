@@ -18,7 +18,7 @@
 
 ### Requirements
 
-- C++20 ([gcc-12+](https://godbolt.org/z/313c4rq14), [clang-15+](https://godbolt.org/z/qcrxGnTMK), [msvc-19.36+](https://godbolt.org/z/YPxdaobEv))
+- C++20 ([gcc-12+](https://godbolt.org/z/qehrne83x), [clang-15+](https://godbolt.org/z/qehrne83x), [msvc-19.36+](https://godbolt.org/z/qehrne83x))
 
 ---
 

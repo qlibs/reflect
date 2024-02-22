@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <tuple>
 
-struct $__struct__$ { $__struct__$* $__member__$; enum class $__enum__$ { $__value__$ }; }; // has to be in the global namespace
+struct reflect_STRUCT { reflect_STRUCT* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
 /**
  * Minimal static reflection library
@@ -57,26 +57,26 @@ template<auto  V> [[nodiscard]] consteval auto function_name() noexcept -> std::
 template<class T> [[nodiscard]] consteval auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
 struct type_name_info {
-  static constexpr auto name = function_name<$__struct__$>();
-  static constexpr auto begin = name.find("$__struct__$");
-  static constexpr auto end = name.substr(begin+std::size(std::string_view{"$__struct__$"}));
+  static constexpr auto name = function_name<reflect_STRUCT>();
+  static constexpr auto begin = name.find("reflect_STRUCT");
+  static constexpr auto end = name.substr(begin+std::size(std::string_view{"reflect_STRUCT"}));
 };
 
 struct enum_name_info {
-  static constexpr auto name = function_name<$__struct__$::$__enum__$::$__value__$>();
-  static constexpr auto begin = name[name.find("$__struct__$::$__enum__$::$__value__$")-1];
-  static constexpr auto end = name.substr(name.find("$__struct__$::$__enum__$::$__value__$")+std::size(std::string_view{"$__struct__$::$__enum__$::$__value__$"}));
+  static constexpr auto name = function_name<reflect_STRUCT::ENUM::VALUE>();
+  static constexpr auto begin = name[name.find("reflect_STRUCT::ENUM::VALUE")-1];
+  static constexpr auto end = name.substr(name.find("reflect_STRUCT::ENUM::VALUE")+std::size(std::string_view{"reflect_STRUCT::ENUM::VALUE"}));
 };
 
 struct member_name_info {
-  static constexpr auto name = function_name<ptr{&ext<$__struct__$>.$__member__$}>();
-  static constexpr auto begin = name[name.find("$__member__$")-1];
-  static constexpr auto end = name.substr(name.find("$__member__$")+std::size(std::string_view{"$__member__$"}));
+  static constexpr auto name = function_name<ptr{&ext<reflect_STRUCT>.MEMBER}>();
+  static constexpr auto begin = name[name.find("MEMBER")-1];
+  static constexpr auto end = name.substr(name.find("MEMBER")+std::size(std::string_view{"MEMBER"}));
 };
 
 template <class Fn, class T>
   requires requires { std::remove_cvref_t<T>{}; }
-[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, tag<0>) noexcept {
+[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&&, tag<0>) noexcept {
   return std::forward<Fn>(fn)();
 }
 
@@ -654,7 +654,6 @@ static_assert(([] {
 
     const auto e = foobar::foo;
     static_assert(std::string_view{"foo"} == enum_name(e));
-
 }(), true));
 
 template <auto N, class T>

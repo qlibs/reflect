@@ -12,9 +12,9 @@
 ### Features
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
-- Minimal (see [#API](#api))
+- Minimal API (see [#API](#api))
 - Verfifies itself upon include (run all tests via static_asserts)
-- Compiler changes agnostic (no ifdefs for compiler specific implementations)
+- Compiler changes agnostic (no ifdefs for the compiler specific implementations)
 
 ### Requirements
 
@@ -81,6 +81,9 @@ int main() {
   // as (row polymorphism)
   constexpr auto bz = reflect::as<baz>(foo{.a=4, .b=2});
   static_assert(4 == bz.a and 0 == bz.c);
+
+  // debug
+  // debug(bz);
 }
 ```
 
@@ -145,7 +148,7 @@ static_assert(std::string_view{"foo"} == type_name(foo{}));
 ```
 
 ```cpp
-template <unsigned Min = REFLECT_ENUM_MIN, unsigned Max = REFLECT_ENUM_MAX, class E>
+template <auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept;
 ```

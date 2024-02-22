@@ -78,7 +78,7 @@ int main() {
   static_assert(4 == b.a and 0 == b.c);
 
   // reflect::debug
-  reflect::debug(bz); // compile-error: debug<const main()::baz&>
+  reflect::debug(f); // compile-error: debug<foo>
 }
 ```
 

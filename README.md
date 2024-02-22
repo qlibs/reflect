@@ -246,12 +246,11 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 - How `reflect` compares to https://wg21.link/P2996?
 
     > `reflect` library only provides basic reflection primitvies, mostly via hacks and workarounds to deal with lack of the reflection.
-    https://wg21.link/P2996 is a language proprosal with a lot of more features and capabilities.
-    If accepted there is no reason to use `reflect` library from C++26+.
+    https://wg21.link/P2996 is a language proprosal with a lot of more features and capabilities. It's like comparing a drop in the ocean to the entire sea!
 
 - How `reflect` works under the hood?
 
-    > There are a many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it.  See `visit` implementation for more details.
+    > There are a many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
 
 - How `reflect` can be compiler changes agnostic?
 

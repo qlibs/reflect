@@ -51,9 +51,9 @@ int main() {
   static_assert("b"sv == reflect::member_name<1, foo>());
   static_assert("b"sv == reflect::member_name<1>(foo{}));
 
-  // reflect::get
   constexpr auto f = foo{.a=4, .b=2};
 
+  // reflect::get (SFINAE friendly)
   static_assert(4 == reflect::get<0>(f));
   static_assert(2 == reflect::get<1>(f));
 
@@ -68,19 +68,15 @@ int main() {
   struct bar { int a{}; int b{}; };
 
   // reflect::to
-  constexpr auto br = reflect::to<bar>(foo{.a=4, .b=2});
-  static_assert(4 == br.a);
-  static_assert(2 == br.b);
-
   constexpr auto t = reflect::to<std::tuple>(foo{.a=4, .b=2});
   static_assert(4 == std::get<0>(t));
   static_assert(2 == std::get<1>(t));
 
-  struct baz { int a{}; int c{}; };
+  struct bar { int a{}; int c{}; };
 
-  // reflect::as (row polymorphism)
-  constexpr auto bz = reflect::as<baz>(foo{.a=4, .b=2});
-  static_assert(4 == bz.a and 0 == bz.c);
+  // reflect::to (row polymorphism / member wise copy)
+  constexpr auto b = reflect::to<bar>(foo{.a=4, .b=2});
+  static_assert(4 == b.a and 0 == b.c);
 
   // reflect::debug
   // reflect::debug(bz); // error: debug<const main()::baz&>
@@ -90,32 +86,6 @@ int main() {
 ---
 
 ### API
-
-```cpp
-template <class T, auto Size>
-struct fixed_string;
-template <class T, auto Size>
-fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
-template<class... Cs>
-fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof...(Cs)>;
-```
-
-```cpp
-static_assert(0u == std::size(fixed_string{""}));
-static_assert(fixed_string{""} == fixed_string{""});
-static_assert(std::string_view{""} == std::string_view{fixed_string{""}});
-static_assert(3u == std::size(fixed_string{"foo"}));
-static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
-static_assert(fixed_string{"foo"} == fixed_string{"foo"});
-```
-
-```cpp
-consteval auto debug(auto&&...) -> void;
-```
-
-```cpp
-debug(foo{}); // compile-time error: debug(foo) is not defined
-```
 
 ```cpp
 template <class Fn, class T>
@@ -148,7 +118,7 @@ static_assert(std::string_view{"foo"} == type_name(foo{}));
 ```
 
 ```cpp
-template <auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
+template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept;
 ```
@@ -160,7 +130,7 @@ static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 ```
 
 ```cpp
-template <auto N, class T> requires (N < size<T>)
+template <std::size_t N, class T> requires (N < size<T>)
 [[nodiscard]] consteval auto member_name(const T& = {}) noexcept;
 ```
 
@@ -173,8 +143,7 @@ static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 ```
 
 ```cpp
-template<auto N, class T>
-  requires (std::is_integral_v<decltype(N)> and N < size<std::remove_cvref_t<T>>)
+template<std::size_t N, class T> requires (N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
 ```
 
@@ -209,27 +178,6 @@ static_assert(true == get<"b">(f));
 ```
 
 ```cpp
-template<class R, class T>
-[[nodiscard]] constexpr auto to(T&& t) noexcept;
-```
-
-```cpp
-struct foo { int a; int b; };
-struct bar { int a{}; int b{}; };
-
-constexpr auto b = to<bar>(foo{.a=4, .b=2});
-static_assert(4 == b.a);
-static_assert(2 == b.b);
-
-auto f = foo{.a=4, .b=2};
-auto b = to<bar>(f);
-f.a = 42;
-assert(42 == f.a);
-assert(4 == b.a);
-assert(2 == b.b);
-```
-
-```cpp
 template<template<class...> class R, class T>
 [[nodiscard]] constexpr auto to(T&& t) noexcept;
 ```
@@ -251,15 +199,41 @@ assert(42 == std::get<1>(t) and 42 == f.b);
 
 ```cpp
 template<class R, class T>
-[[nodiscard]] constexpr auto as(T&& t);
+[[nodiscard]] constexpr auto to(T&& t);
 ```
 
 ```cpp
 struct foo { int a; int b; };
 struct baz { int a{}; int c{}; };
 
-const auto b = as<baz>(foo{.a=4, .b=2});
+const auto b = to<baz>(foo{.a=4, .b=2});
 assert(4 == b.a and 0 == b.c);
+```
+
+```cpp
+template <class T, std::size_t Size>
+struct fixed_string;
+template <class T, std::size_t Size>
+fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
+template<class... Cs>
+fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof...(Cs)>;
+```
+
+```cpp
+static_assert(0u == std::size(fixed_string{""}));
+static_assert(fixed_string{""} == fixed_string{""});
+static_assert(std::string_view{""} == std::string_view{fixed_string{""}});
+static_assert(3u == std::size(fixed_string{"foo"}));
+static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
+static_assert(fixed_string{"foo"} == fixed_string{"foo"});
+```
+
+```cpp
+consteval auto debug(auto&&...) -> void;
+```
+
+```cpp
+debug(foo{}); // compile-time error: debug(foo) is not defined
 ```
 
 > Configuration

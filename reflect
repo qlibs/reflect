@@ -38,9 +38,9 @@ template <class T> extern const T ext{};
 struct any { template <class T> operator T(); };
 template <class T> struct ptr { const T* value; };
 template <class T> ptr(const T*) -> ptr<T>;
-template<auto N> struct tag : tag<N-1> { };
+template<std::size_t N> struct tag : tag<N-1> { };
 template<> struct tag<0> { };
-template<auto N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
+template<std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
   return [&]<auto... Ns>(std::index_sequence<Ns...>) -> decltype(auto) {
     return [](decltype((const void*)Ns)..., auto* nth, auto*...) -> decltype(auto) { return *nth; }(&args...);
   }(std::make_index_sequence<N>{});
@@ -531,7 +531,7 @@ template <class Fn, class T>
 
 consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 
-template <class T, auto Size>
+template <class T, std::size_t Size>
 struct fixed_string {
   constexpr explicit(false) fixed_string(const T* str) { std::copy_n(str, Size, std::data(data)); }
   constexpr explicit(true) fixed_string(const auto... cs) requires (Size == sizeof...(cs)): data{cs...} { }
@@ -540,7 +540,7 @@ struct fixed_string {
   [[nodiscard]] constexpr auto size() const { return Size; }
   std::array<T, Size> data{};
 };
-template <class T, auto Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
+template <class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
 template<class... Cs> fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof...(Cs)>;
 
 static_assert(0u == std::size(fixed_string{""}));
@@ -553,8 +553,8 @@ static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 template <class Fn, class T>
 [[nodiscard]] constexpr auto visit(Fn&& fn, T&& t) noexcept -> decltype(detail::visit(std::forward<Fn>(fn), std::forward<T>(t), detail::tag<REFLECT_MAX_SIZE>{})) {
   /// #if __has_builtin(__cpp_structure_bindings_can_introduce_a_pack)
-  ///  auto&& [... ts] = std::forward<T>(t);
-  ///  return std::forward<Fn>(fn)(std::forward<decltype(ts)>(ts)...);
+  /// auto&& [... ts] = std::forward<T>(t);
+  /// return std::forward<Fn>(fn)(std::forward<decltype(ts)>(ts)...);
   /// #endif
   return detail::visit(std::forward<Fn>(fn), std::forward<T>(t), detail::tag<REFLECT_MAX_SIZE>{});
 }
@@ -606,7 +606,7 @@ static_assert(([] {
   static_assert(std::string_view{"bar"} == type_name(bar{}));
 }(), true));
 
-template <auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
+template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept {
   std::array<std::string_view, Max-Min+1> enum_names{};
@@ -656,8 +656,7 @@ static_assert(([] {
     static_assert(std::string_view{"foo"} == enum_name(e));
 }(), true));
 
-template <auto N, class T>
-  requires (N < size<T>)
+template <std::size_t N, class T> requires (N < size<T>)
 [[nodiscard]] consteval auto member_name(const T& = {}) noexcept {
   constexpr std::string_view name = detail::function_name<visit([](auto&&... args) { return detail::ptr{&detail::nth_pack_element<N>(std::forward<decltype(args)>(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp = name.substr(0, name.find(detail::member_name_info::end));
@@ -680,8 +679,7 @@ static_assert(([] {
   static_assert(std::string_view{"bar"} == member_name<2>(foo{}));
 }(), true));
 
-template<auto N, class T>
-  requires (std::is_integral_v<decltype(N)> and N < size<std::remove_cvref_t<T>>)
+template<std::size_t N, class T> requires (N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(std::forward<decltype(args)>(args)...); }, std::forward<T>(t));
 }
@@ -712,8 +710,7 @@ static_assert(([] {
   static_assert(not has_member_name<foo, "">);
 }(), true));
 
-template<fixed_string Name, class T>
-  requires has_member_name<T, Name>
+template<fixed_string Name, class T> requires has_member_name<T, Name>
 constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) {
     constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
@@ -736,39 +733,6 @@ static_assert(([] {
 
   static_assert(42 == get<"i">(f));
   static_assert(true == get<"b">(f));
-}(), true));
-
-template<class R, class T>
-[[nodiscard]] constexpr auto to(T&& t) noexcept {
-  return visit([](auto&&... args) { return R{std::forward<decltype(args)>(args)...}; }, std::forward<T>(t));
-}
-
-static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
-  struct foo { int a; int b; };
-  struct bar { int a{}; int b{}; };
-
-  [] {
-    constexpr auto b = to<bar>(foo{.a=4, .b=2});
-    static_assert(4 == b.a);
-    static_assert(2 == b.b);
-  }();
-
-  [] {
-    auto f = foo{.a=4, .b=2};
-    auto b = to<bar>(f);
-    f.a = 42;
-    expect(42 == f.a);
-    expect(4 == b.a);
-    expect(2 == b.b);
-  }();
-
-  [] {
-    const auto f = foo{.a=4, .b=2};
-    const auto b = to<bar>(f);
-    expect(4 == b.a);
-    expect(2 == b.b);
-  }();
-
 }(), true));
 
 template<template<class...> class R, class T>
@@ -807,7 +771,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 }(), true));
 
 template<class R, class T>
-[[nodiscard]] constexpr auto as(T&& t) {
+[[nodiscard]] constexpr auto to(T&& t) noexcept {
   R r{};
   auto r_view = to<std::tuple>(r);
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
@@ -831,6 +795,28 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     int b{};
   };
 
+  [] {
+    constexpr auto b = to<bar>(foo{.a=4, .b=2});
+    static_assert(4 == b.a);
+    static_assert(2 == b.b);
+  }();
+
+  [] {
+    auto f = foo{.a=4, .b=2};
+    auto b = to<bar>(f);
+    f.a = 42;
+    expect(42 == f.a);
+    expect(4 == b.a);
+    expect(2 == b.b);
+  }();
+
+  [] {
+    const auto f = foo{.a=4, .b=2};
+    const auto b = to<bar>(f);
+    expect(4 == b.a);
+    expect(2 == b.b);
+  }();
+
   struct baz {
     int a{};
     int c{};
@@ -838,14 +824,14 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
   [] {
     auto f = foo{.a=4, .b=2};
-    auto b = as<bar>(f);
+    auto b = to<bar>(f);
     b.a = 1;
     expect(1 == b.a and 4 == f.a);
     expect(2 == b.b and 2 == f.b);
   }();
 
   [] {
-    const auto b = as<baz>(foo{.a=4, .b=2});
+    const auto b = to<baz>(foo{.a=4, .b=2});
     expect(4 == b.a and 0 == b.c);
   }();
 }(), true));

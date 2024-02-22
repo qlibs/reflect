@@ -534,14 +534,12 @@ consteval auto debug(auto&&...) -> void; // [debug facility] shows types at comp
 template <class T, std::size_t Size>
 struct fixed_string {
   constexpr explicit(false) fixed_string(const T* str) { std::copy_n(str, Size, std::data(data)); }
-  constexpr explicit(true) fixed_string(const auto... cs) requires (Size == sizeof...(cs)): data{cs...} { }
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
   [[nodiscard]] constexpr explicit(false) operator std::string_view() const { return {std::data(data), Size}; }
   [[nodiscard]] constexpr auto size() const { return Size; }
   std::array<T, Size> data{};
 };
 template <class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
-template<class... Cs> fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof...(Cs)>;
 
 static_assert(0u == std::size(fixed_string{""}));
 static_assert(fixed_string{""} == fixed_string{""});
@@ -589,9 +587,8 @@ template <class T>
   constexpr std::string_view name = detail::function_name<T>();
   constexpr std::string_view type_name = name.substr(detail::type_name_info::begin, name.find(detail::type_name_info::end) - detail::type_name_info::begin);
   constexpr std::string_view function_name = type_name.substr(type_name.find_last_of("::")+1);
-  return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    return fixed_string{function_name[Ns]...};
-  }(std::make_index_sequence<std::size(function_name)>{});
+  static_assert(std::size(function_name) > 0u);
+  return fixed_string<std::remove_cvref_t<decltype(function_name[0])>, std::size(function_name)>{std::data(function_name)};
 }
 
 static_assert(([] {
@@ -661,9 +658,8 @@ template <std::size_t N, class T> requires (N < size<T>)
   constexpr std::string_view name = detail::function_name<visit([](auto&&... args) { return detail::ptr{&detail::nth_pack_element<N>(std::forward<decltype(args)>(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp = name.substr(0, name.find(detail::member_name_info::end));
   constexpr std::string_view function_name = tmp.substr(tmp.find_last_of(detail::member_name_info::begin)+1);
-  return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    return fixed_string{function_name[Ns]...};
-  }(std::make_index_sequence<std::size(function_name)>{});
+  static_assert(std::size(function_name) > 0u);
+  return fixed_string<std::remove_cvref_t<decltype(function_name[0])>, std::size(function_name)>{std::data(function_name)};
 }
 
 static_assert(([] {
@@ -714,7 +710,7 @@ template<fixed_string Name, class T> requires has_member_name<T, Name>
 constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) {
     constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
-      int i{};
+      std::size_t i{};
       ([&] { if constexpr (std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) { i = Ns; } }(), ...);
       return i;
     }(std::make_index_sequence<size<std::remove_cvref_t<T>>>{});

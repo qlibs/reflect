@@ -211,12 +211,8 @@ assert(4 == b.a and 0 == b.c);
 ```
 
 ```cpp
-template <class T, std::size_t Size>
-struct fixed_string;
-template <class T, std::size_t Size>
-fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
-template<class... Cs>
-fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof...(Cs)>;
+template <class T, std::size_t Size> struct fixed_string;
+template <class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
 ```
 
 ```cpp

@@ -775,7 +775,7 @@ template<class R, class T>
   auto r_view = to<std::tuple>(r);
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
     ([&] {
-      if constexpr (requires { get<member_name<Ns, R>()>(t); }) {
+      if constexpr (requires { std::get<Ns>(r_view) = get<member_name<Ns, R>()>(t); }) {
         std::get<Ns>(r_view) = get<member_name<Ns, R>()>(t);
       }
     }(), ...);
@@ -832,6 +832,16 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   {
     const auto b = to<baz>(foo{.a=4, .b=2});
     expect(4 == b.a and 0 == b.c);
+  }
+
+  struct foobar {
+    int a{};
+    enum : int { } b; // strong type, type conversion disabled
+  };
+
+  {
+    const auto fb = to<foobar>(foo{.a=4, .b=2});
+    expect(4 == fb.a and 0 == fb.b);
   }
 }(), true));
 } // namespace reflect

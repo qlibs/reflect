@@ -13,7 +13,7 @@
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
 - Minimal API (see [#API](#api))
-- Verfifies itself upon include (run all tests via static_asserts)
+- Verifies itself upon include (run all tests via static_asserts)
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations)
 
 ### Requirements
@@ -260,7 +260,7 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
     > `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
     Any compiler change will end up with new prefixes/postfixes and won't require additional maintanace.
 
-- What does it mean that `reflect` tests itself upon inlude?
+- What does it mean that `reflect` tests itself upon include?
 
     > `reflect` runs all tests (via static_asserts) upon include. If the include compiled it means all tests are passing and the library works correctly on given compiler, enviornment.
 

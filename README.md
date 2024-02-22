@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/qehrne83x">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/zPKbf1MKh">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/zqr9KPxd9">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -31,27 +31,27 @@ int main() {
   struct foo { int a; int b; };
   enum E { A, B };
 
-  // visit
+  // reflect::visit
   static_assert(2 == reflect::visit([](auto&&... args) { return sizeof...(args); }, foo{}));
 
-  // size
+  // reflect::size
   static_assert(2 == reflect::size<foo>);
 
-  // type_name
+  // reflect::type_name
   static_assert("foo"sv == reflect::type_name<foo>());
   static_assert("foo"sv == reflect::type_name(foo{}));
 
-  // enum_name
+  // reflect::enum_name
   static_assert("A"sv == reflect::enum_name(E::A));
   static_assert("B"sv == reflect::enum_name(E::B));
 
-  // member_name
+  // reflect::member_name
   static_assert("a"sv == reflect::member_name<0, foo>());
   static_assert("a"sv == reflect::member_name<0>(foo{}));
   static_assert("b"sv == reflect::member_name<1, foo>());
   static_assert("b"sv == reflect::member_name<1>(foo{}));
 
-  // get
+  // reflect::get
   constexpr auto f = foo{.a=4, .b=2};
 
   static_assert(4 == reflect::get<0>(f));
@@ -60,14 +60,14 @@ int main() {
   static_assert(4 == reflect::get<"a">(f));
   static_assert(2 == reflect::get<"b">(f));
 
-  // has_member_name
+  // reflect::has_member_name
   static_assert(reflect::has_member_name<foo, "a">);
   static_assert(reflect::has_member_name<foo, "b">);
   static_assert(not reflect::has_member_name<foo, "c">);
 
   struct bar { int a{}; int b{}; };
 
-  // to
+  // reflect::to
   constexpr auto br = reflect::to<bar>(foo{.a=4, .b=2});
   static_assert(4 == br.a);
   static_assert(2 == br.b);
@@ -78,12 +78,12 @@ int main() {
 
   struct baz { int a{}; int c{}; };
 
-  // as (row polymorphism)
+  // reflect::as (row polymorphism)
   constexpr auto bz = reflect::as<baz>(foo{.a=4, .b=2});
   static_assert(4 == bz.a and 0 == bz.c);
 
-  // debug
-  // debug(bz);
+  // reflect::debug
+  // reflect::debug(bz); // error: debug<const main()::baz&>
 }
 ```
 

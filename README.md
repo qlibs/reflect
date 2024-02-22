@@ -54,10 +54,9 @@ int main() {
   constexpr auto f = foo{.a=4, .b=2};
 
   // reflect::get (SFINAE friendly)
-  static_assert(4 == reflect::get<0>(f));
+  static_assert(4 == reflect::get<0>(f)); // by index
   static_assert(2 == reflect::get<1>(f));
-
-  static_assert(4 == reflect::get<"a">(f));
+  static_assert(4 == reflect::get<"a">(f)); // by name
   static_assert(2 == reflect::get<"b">(f));
 
   // reflect::has_member_name

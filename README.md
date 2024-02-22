@@ -98,14 +98,12 @@ fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof..
 ```
 
 ```cpp
-{
-  static_assert(0u == std::size(fixed_string{""}));
-  static_assert(fixed_string{""} == fixed_string{""});
-  static_assert(std::string_view{""} == std::string_view{fixed_string{""}});
-  static_assert(3u == std::size(fixed_string{"foo"}));
-  static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
-  static_assert(fixed_string{"foo"} == fixed_string{"foo"});
-}
+static_assert(0u == std::size(fixed_string{""}));
+static_assert(fixed_string{""} == fixed_string{""});
+static_assert(std::string_view{""} == std::string_view{fixed_string{""}});
+static_assert(3u == std::size(fixed_string{"foo"}));
+static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
+static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 ```
 
 ```cpp
@@ -113,9 +111,7 @@ consteval auto debug(auto&&...) -> void;
 ```
 
 ```cpp
-{
-  debug(foo{}); // compile-time error: debug(foo) is not defined
-}
+debug(foo{}); // compile-time error: debug(foo) is not defined
 ```
 
 ```cpp
@@ -125,9 +121,7 @@ template <class Fn, class T>
 
 ```cpp
 struct foo { int a; int b; };
-{
-  static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}));
-}
+static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}));
 ```
 
 ```cpp
@@ -136,9 +130,7 @@ template<class T> inline constexpr auto size = /*unspecified*/
 
 ```cpp
 struct foo { int a; int b; };
-{
-  static_assert(2 == size<foo>);
-}
+static_assert(2 == size<foo>);
 ```
 
 ```cpp
@@ -148,10 +140,8 @@ template <class T>
 
 ```cpp
 struct foo { int a; int b; };
-{
-  static_assert(std::string_view{"foo"} == type_name<foo>());
-  static_assert(std::string_view{"foo"} == type_name(foo{}));
-}
+static_assert(std::string_view{"foo"} == type_name<foo>());
+static_assert(std::string_view{"foo"} == type_name(foo{}));
 ```
 
 ```cpp
@@ -162,10 +152,8 @@ template <unsigned Min = REFLECT_ENUM_MIN, unsigned Max = REFLECT_ENUM_MAX, clas
 
 ```cpp
 enum class Enum { foo = 1, bar = 2 };
-{
-  static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
-  static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
-}
+static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
+static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 ```
 
 ```cpp
@@ -175,12 +163,10 @@ template <auto N, class T> requires (N < size<T>)
 
 ```cpp
 struct foo { int a; int b; };
-{
-  static_assert(std::string_view{"a"} == member_name<0, foo>());
-  static_assert(std::string_view{"a"} == member_name<0>(foo{}));
-  static_assert(std::string_view{"b"} == member_name<1, foo>());
-  static_assert(std::string_view{"b"} == member_name<1>(foo{}));
-}
+static_assert(std::string_view{"a"} == member_name<0, foo>());
+static_assert(std::string_view{"a"} == member_name<0>(foo{}));
+static_assert(std::string_view{"b"} == member_name<1, foo>());
+static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 ```
 
 ```cpp
@@ -191,11 +177,9 @@ template<auto N, class T>
 
 ```cpp
 struct foo { int a; bool b; };
-{
-  constexpr auto f = foo{.i=42, .b=true};
-  static_assert(42 == get<0>(f));
-  static_assert(true == get<1>(f));
-}
+constexpr auto f = foo{.i=42, .b=true};
+static_assert(42 == get<0>(f));
+static_assert(true == get<1>(f));
 ```
 
 ```cpp
@@ -204,11 +188,9 @@ template <class T, fixed_string Name> concept has_member_name = /*unspecified*/
 
 ```cpp
 struct foo { int a; int b; };
-{
-  static_assert(has_member_name<foo, "a">);
-  static_assert(has_member_name<foo, "b">);
-  static_assert(not has_member_name<foo, "c">);
-}
+static_assert(has_member_name<foo, "a">);
+static_assert(has_member_name<foo, "b">);
+static_assert(not has_member_name<foo, "c">);
 ```
 
 ```cpp
@@ -218,11 +200,9 @@ constexpr decltype(auto) get(T&& t) noexcept;
 
 ```cpp
 struct foo { int a; int b; };
-{
-  constexpr auto f = foo{.i=42, .b=true};
-  static_assert(42 == get<"a">(f));
-  static_assert(true == get<"b">(f));
-}
+constexpr auto f = foo{.i=42, .b=true};
+static_assert(42 == get<"a">(f));
+static_assert(true == get<"b">(f));
 ```
 
 ```cpp
@@ -233,19 +213,17 @@ template<class R, class T>
 ```cpp
 struct foo { int a; int b; };
 struct bar { int a{}; int b{}; };
-{
-  constexpr auto b = to<bar>(foo{.a=4, .b=2});
-  static_assert(4 == b.a);
-  static_assert(2 == b.b);
-}
-{
-  auto f = foo{.a=4, .b=2};
-  auto b = to<bar>(f);
-  f.a = 42;
-  assert(42 == f.a);
-  assert(4 == b.a);
-  assert(2 == b.b);
-}
+
+constexpr auto b = to<bar>(foo{.a=4, .b=2});
+static_assert(4 == b.a);
+static_assert(2 == b.b);
+
+auto f = foo{.a=4, .b=2};
+auto b = to<bar>(f);
+f.a = 42;
+assert(42 == f.a);
+assert(4 == b.a);
+assert(2 == b.b);
 ```
 
 ```cpp
@@ -255,19 +233,17 @@ template<template<class...> class R, class T>
 
 ```cpp
 struct foo { int a; int b; };
-{
-  constexpr auto t = to<std::tuple>(foo{.a=4, .b=2});
-  static_assert(4 == std::get<0>(t));
-  static_assert(2 == std::get<1>(t));
-}
-{
-  auto f = foo{.a=4, .b=2};
-  auto t = to<std::tuple>(f);
-  std::get<0>(t) *= 10;
-  f.b=42;
-  assert(40 == std::get<0>(t) and 40 == f.a);
-  assert(42 == std::get<1>(t) and 42 == f.b);
-}
+
+constexpr auto t = to<std::tuple>(foo{.a=4, .b=2});
+static_assert(4 == std::get<0>(t));
+static_assert(2 == std::get<1>(t));
+
+auto f = foo{.a=4, .b=2};
+auto t = to<std::tuple>(f);
+std::get<0>(t) *= 10;
+f.b=42;
+assert(40 == std::get<0>(t) and 40 == f.a);
+assert(42 == std::get<1>(t) and 42 == f.b);
 ```
 
 ```cpp
@@ -278,10 +254,9 @@ template<class R, class T>
 ```cpp
 struct foo { int a; int b; };
 struct baz { int a{}; int c{}; };
-{
-  const auto b = as<baz>(foo{.a=4, .b=2});
-  assert(4 == b.a and 0 == b.c);
-}
+
+const auto b = as<baz>(foo{.a=4, .b=2});
+assert(4 == b.a and 0 == b.c);
 ```
 
 > Configuration

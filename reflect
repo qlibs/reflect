@@ -746,27 +746,27 @@ template<template<class...> class R, class T>
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
   struct foo { int a; int b; };
 
-  [] {
+  {
     constexpr auto t = to<std::tuple>(foo{.a=4, .b=2});
     static_assert(4 == std::get<0>(t));
     static_assert(2 == std::get<1>(t));
-  }();
+  }
 
-  [] {
+  {
     auto f = foo{.a=4, .b=2};
     auto t = to<std::tuple>(f);
     std::get<0>(t) *= 10;
     f.b=42;
     expect(40 == std::get<0>(t) and 40 == f.a);
     expect(42 == std::get<1>(t) and 42 == f.b);
-  }();
+  }
 
-  [] {
+  {
     const auto f = foo{.a=4, .b=2};
     auto t = to<std::tuple>(f);
     expect(f.a == std::get<0>(t));
     expect(f.b == std::get<1>(t));
-  }();
+  }
 }(), true));
 
 template<class R, class T>
@@ -794,45 +794,45 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     int b{};
   };
 
-  [] {
+  {
     constexpr auto b = to<bar>(foo{.a=4, .b=2});
     static_assert(4 == b.a);
     static_assert(2 == b.b);
-  }();
+  }
 
-  [] {
+  {
     auto f = foo{.a=4, .b=2};
     auto b = to<bar>(f);
     f.a = 42;
     expect(42 == f.a);
     expect(4 == b.a);
     expect(2 == b.b);
-  }();
+  }
 
-  [] {
+  {
     const auto f = foo{.a=4, .b=2};
     const auto b = to<bar>(f);
     expect(4 == b.a);
     expect(2 == b.b);
-  }();
+  }
 
   struct baz {
     int a{};
     int c{};
   };
 
-  [] {
+  {
     auto f = foo{.a=4, .b=2};
     auto b = to<bar>(f);
     b.a = 1;
     expect(1 == b.a and 4 == f.a);
     expect(2 == b.b and 2 == f.b);
-  }();
+  }
 
-  [] {
+  {
     const auto b = to<baz>(foo{.a=4, .b=2});
     expect(4 == b.a and 0 == b.c);
-  }();
+  }
 }(), true));
 } // namespace reflect
 #endif  // REFLECT

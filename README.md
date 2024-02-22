@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/qehrne83x">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/zPKbf1MKh">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -18,11 +18,71 @@
 
 ### Requirements
 
-- C++20* ([gcc-12+](https://godbolt.org/z/313c4rq14), [clang-15+](https://godbolt.org/z/qcrxGnTMK), [msvc-19.36+](https://godbolt.org/z/YPxdaobEv))
+- C++20 ([gcc-12+](https://godbolt.org/z/313c4rq14), [clang-15+](https://godbolt.org/z/qcrxGnTMK), [msvc-19.36+](https://godbolt.org/z/YPxdaobEv))
 
 ---
 
-### Hello world
+### Hello world (https://godbolt.org/z/zPKbf1MKh)
+
+```cpp
+#include <reflect>
+
+int main() {
+  struct foo { int a; int b; };
+  enum E { A, B };
+
+  // visit
+  static_assert(2 == reflect::visit([](auto&&... args) { return sizeof...(args); }, foo{}));
+
+  // size
+  static_assert(2 == reflect::size<foo>);
+
+  // type_name
+  static_assert("foo"sv == reflect::type_name<foo>());
+  static_assert("foo"sv == reflect::type_name(foo{}));
+
+  // enum_name
+  static_assert("A"sv == reflect::enum_name(E::A));
+  static_assert("B"sv == reflect::enum_name(E::B));
+
+  // member_name
+  static_assert("a"sv == reflect::member_name<0, foo>());
+  static_assert("a"sv == reflect::member_name<0>(foo{}));
+  static_assert("b"sv == reflect::member_name<1, foo>());
+  static_assert("b"sv == reflect::member_name<1>(foo{}));
+
+  // get
+  constexpr auto f = foo{.a=4, .b=2};
+
+  static_assert(4 == reflect::get<0>(f));
+  static_assert(2 == reflect::get<1>(f));
+
+  static_assert(4 == reflect::get<"a">(f));
+  static_assert(2 == reflect::get<"b">(f));
+
+  // has_member_name
+  static_assert(reflect::has_member_name<foo, "a">);
+  static_assert(reflect::has_member_name<foo, "b">);
+  static_assert(not reflect::has_member_name<foo, "c">);
+
+  struct bar { int a{}; int b{}; };
+
+  // to
+  constexpr auto br = reflect::to<bar>(foo{.a=4, .b=2});
+  static_assert(4 == br.a);
+  static_assert(2 == br.b);
+
+  constexpr auto t = reflect::to<std::tuple>(foo{.a=4, .b=2});
+  static_assert(4 == std::get<0>(t));
+  static_assert(2 == std::get<1>(t));
+
+  struct baz { int a{}; int c{}; };
+
+  // as (row polymorphism)
+  constexpr auto bz = reflect::as<baz>(foo{.a=4, .b=2});
+  static_assert(4 == bz.a and 0 == bz.c);
+}
+```
 
 ---
 
@@ -48,7 +108,7 @@ fixed_string(const Cs... cs) -> fixed_string<std::common_type_t<Cs...>, sizeof..
 }
 ```
 
-``cpp
+```cpp
 consteval auto debug(auto&&...) -> void;
 ```
 
@@ -245,14 +305,12 @@ struct baz { int a{}; int c{}; };
 
 - How `reflect` works under the hood?
 
-    > There are a few different workarounds which can be applied to achieve reflection in C++20. `reflect` uses structure bindings, concepts and source_location. See visit implementation for more details.
+    > There are a many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it.  See `visit` implementation for more details.
 
 - How `reflect` can be compiler changes agnostic?
 
-    > `reflect` precomputes required prefixes/postfixes to find intresting data (for the known up-front types) from the `source_location::function_name()` output for each compiler upon inclusion.
+    > `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
     Any compiler change will end up with new prefixes/postfixes and won't require additional maintanace.
-
-- How `reflect` can be compiler changes agnostic?
 
 - What does it mean that `reflect` tests itself upon inlude?
 
@@ -266,20 +324,7 @@ struct baz { int a{}; int c{}; };
 
 - How to extend number of members to be reflected (default: 64)?
 
-    > Add new `reflect::detail::visit` overleads
-
-    ```cpp
-        template <class Fn, class T>
-          requires requires { std::remove_cvref_t<T>{any{}, any{}}; }
-        [[nodiscard]] constexpr decltype(auto) reflect::detail::visit(Fn&& fn, T&& t, tag<2>) noexcept {
-          auto&& [_1, _2] = std::forward<T>(t);
-          return std::forward<Fn>(fn)(std::forward<decltype(_1)>(_1), std::forward<decltype(_2)>(_2));
-        }
-    ```
-
-    > #define REFLECT_MAX_SIZE <<Number of supported overloads>>
-
-- What is row polymorphism?
+    > Add new `reflect::detail::visit` overleads and extend `REFLECT_MAX_SIZE`
 
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp)

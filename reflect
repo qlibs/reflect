@@ -203,9 +203,9 @@ template <class T>
 }
 
 namespace test {
-struct empty {};
-struct foo {};
-struct bar {};
+struct empty { };
+struct foo { };
+struct bar { };
 template <class T> struct foo_t { };
 namespace ns::inline v1 {
   template<auto...> struct bar_v { };

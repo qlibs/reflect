@@ -31,12 +31,12 @@ struct  REFLECT_STRUCT { REFLECT_STRUCT* MEMBER; enum class ENUM { VALUE }; }; /
  */
 namespace reflect::inline v1_0_1 {
 namespace detail {
-template <class T> extern const T ext{};
+template<class T> extern const T ext{};
 template<class T> struct any { template<class R> constexpr operator R() const noexcept; };
 template<auto = []{}> struct auto_ { constexpr explicit(false) auto_(auto&&) noexcept { } };
-template <class T> struct ref { T& ref_; };
-template <class T> ref(T&) -> ref<T>;
-template <std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
+template<class T> struct ref { T& ref_; };
+template<class T> ref(T&) -> ref<T>;
+template<std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
   return [&]<auto... Is>(std::index_sequence<Is...>) -> decltype(auto) {
     return [] (auto_<Is>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); }(REFLECT_FWD(args)...);
   }(std::make_index_sequence<N>());
@@ -375,7 +375,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     auto f = foo{.a=4, .b=2};
     auto t = to<std::tuple>(f);
     std::get<0>(t) *= 10;
-    f.b=42;
+    f.b = 42;
     expect(40 == std::get<0>(t) and 40 == f.a);
     expect(42 == std::get<1>(t) and 42 == f.b);
   }

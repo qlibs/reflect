@@ -223,7 +223,7 @@ static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 ```
 
 ```cpp
-template<auto...> consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+template<auto&&...> consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 ```
 
 ```cpp

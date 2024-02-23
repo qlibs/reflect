@@ -191,7 +191,7 @@ static_assert(2 == std::get<1>(t));
 auto f = foo{.a=4, .b=2};
 auto t = to<std::tuple>(f);
 std::get<0>(t) *= 10;
-f.b=42;
+f.b = 42;
 assert(40 == std::get<0>(t) and 40 == f.a);
 assert(42 == std::get<1>(t) and 42 == f.b);
 ```

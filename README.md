@@ -278,16 +278,13 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
     }
     ```
 
+- Doesn't compile with MSVC `/W4`?
+
+    > MSVC, even with /std:c++20 is missing predifined `add/and/or/not` unless `#include <iso646.h>` is added - https://godbolt.org/z/9MME9o66K.
+
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp)
 
-- How can I contribute?
-
-    > Please follow [CONTRIBUTING.md](.github/CONTRIBUTING.md)
-
-- How to report a bug?
-
-    > Please follow [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)
 ---
 
 **Disclaimer** `reflect` is not an official Boost library.

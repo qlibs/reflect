@@ -282,7 +282,7 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
     > MSVC, even with /std:c++20 is missing predifined `add/and/or/not` unless `#include <iso646.h>` is added - https://godbolt.org/z/9MME9o66K.
 
-- How to integrate with CMake/CPM (https://github.com/boost-ext/reflect/issues/9)?
+- How to integrate with CMake/CPM?
 
     ```
     CPMAddPackage(

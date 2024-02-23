@@ -32,13 +32,13 @@ struct  REFLECT_STRUCT { REFLECT_STRUCT* MEMBER; enum class ENUM { VALUE }; }; /
 namespace reflect::inline v1_0_0 {
 namespace detail {
 template <class T> extern const T ext{};
-template<class T> struct any { template<class R> operator R(); };
-template<auto> struct auto_v { constexpr auto_v(auto&&) {} };
-template <class T> struct cref { const T& value; };
-template <class T> cref(const T&) -> cref<T>;
-template <std::size_t N> [[nodiscard]] constexpr auto nth_pack_element(auto&&... args) -> decltype(auto) {
+template<class T> struct any { template<class R> constexpr operator R() const noexcept; };
+template<auto = []{}> struct auto_ { constexpr explicit(false) auto_(auto&&) noexcept { } };
+template <class T> struct ref { T& ref_; };
+template <class T> ref(T&) -> ref<T>;
+template <std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
   return [&]<auto... Is>(std::index_sequence<Is...>) -> decltype(auto) {
-    return [] (auto_v<Is>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); }(REFLECT_FWD(args)...);
+    return [] (auto_<Is>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); }(REFLECT_FWD(args)...);
   }(std::make_index_sequence<N>());
 }
 
@@ -65,7 +65,7 @@ struct enum_name_info {
 };
 
 struct member_name_info {
-  static constexpr auto name = function_name<cref{ext<REFLECT_STRUCT>.MEMBER}>();
+  static constexpr auto name = function_name<ref{ext<REFLECT_STRUCT>.MEMBER}>();
   static constexpr auto begin = name[name.find("MEMBER")-1];
   static constexpr auto end = name.substr(name.find("MEMBER")+std::size(std::string_view{"MEMBER"}));
 };
@@ -265,7 +265,7 @@ static_assert(([] {
 
 template <std::size_t N, class T> requires (N < size<T>)
 [[nodiscard]] consteval auto member_name(const T& = {}) noexcept {
-  constexpr std::string_view name = detail::function_name<visit([](auto&&... args) { return detail::cref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
+  constexpr std::string_view name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp = name.substr(0, name.find(detail::member_name_info::end));
   constexpr std::string_view function_name = tmp.substr(tmp.find_last_of(detail::member_name_info::begin)+1);
   static_assert(std::size(function_name) > 0u);

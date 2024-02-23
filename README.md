@@ -283,6 +283,23 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
     > MSVC, even with /std:c++20 is missing predifined `add/and/or/not` unless `#include <iso646.h>` is added - https://godbolt.org/z/9MME9o66K.
 
+- How to integrate with CMake/CPM (https://github.com/boost-ext/reflect/issues/9)?
+
+    ```
+    CPMAddPackage(
+        Name reflect
+        GITHUB_REPOSITORY boost-ext/reflect
+        GIT_TAG v1.0.0
+    )
+    add_library(reflect INTERFACE)
+    target_include_directories(reflect SYSTEM INTERFACE ${reflect_SOURCE_DIR})
+    add_library(reflect::reflect ALIAS reflect)
+    ```
+
+    ```
+    target_link_libraries(${PROJECT_NAME} reflect::reflect);
+    ```
+
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp)
 

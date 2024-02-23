@@ -277,11 +277,11 @@ static_assert(([] {
 
 template <std::size_t N, class T> requires (N < size<T>)
 [[nodiscard]] consteval auto member_name(const T& = {}) noexcept {
-  constexpr std::string_view name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
-  constexpr std::string_view tmp = name.substr(0, name.find(detail::member_name_info::end));
-  constexpr std::string_view function_name = tmp.substr(tmp.find_last_of(detail::member_name_info::begin)+1);
-  static_assert(std::size(function_name) > 0u);
-  return fixed_string<std::remove_cvref_t<decltype(function_name[0])>, std::size(function_name)>{std::data(function_name)};
+  constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
+  constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
+  constexpr std::string_view member_name = tmp_member_name.substr(tmp_member_name.find_last_of(detail::member_name_info::begin)+1);
+  static_assert(std::size(member_name) > 0u);
+  return fixed_string<std::remove_cvref_t<decltype(member_name[0])>, std::size(member_name)>{std::data(member_name)};
 }
 
 static_assert(([] {

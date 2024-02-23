@@ -73,7 +73,7 @@ int main() {
 
   struct bar { int a{}; int c{}; };
 
-  // reflect::to (row polymorphism / member wise copy)
+  // reflect::to (row polymorphism / name aware members copy)
   constexpr auto b = reflect::to<bar>(foo{.a=4, .b=2});
   static_assert(4 == b.a and 0 == b.c);
 

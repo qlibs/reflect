@@ -6,7 +6,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 #ifndef REFLECT
-#define REFLECT 1'0'0 // SemVer - should match reflect namespace
+#define REFLECT 1'0'1 // SemVer - should match reflect namespace
 
 #include <algorithm>
 #include <array>
@@ -29,7 +29,7 @@ struct  REFLECT_STRUCT { REFLECT_STRUCT* MEMBER; enum class ENUM { VALUE }; }; /
 /**
  * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect)
  */
-namespace reflect::inline v1_0_0 {
+namespace reflect::inline v1_0_1 {
 namespace detail {
 template <class T> extern const T ext{};
 template<class T> struct any { template<class R> constexpr operator R() const noexcept; };

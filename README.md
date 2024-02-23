@@ -234,9 +234,8 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
 ```cpp
 #define REFLECT 1'0'0       // Current library version (SemVer)
-#define REFLECT_MAX_SIZE 64 // Max number of member fields to be reflected
 #define REFLECT_ENUM_MIN 0  // Min size for enum name
-#define REFLECT_ENUM_MAX 64 // Min size for enum name lookup
+#define REFLECT_ENUM_MAX 64 // Max size for enum name
 ```
 
 ---
@@ -269,7 +268,15 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
 - How to extend number of members to be reflected (default: 64)?
 
-    > Add new `reflect::detail::visit` overleads and extend `REFLECT_MAX_SIZE`
+    > Overload `reflect::visit` overload
+
+    ```cpp
+    template <class Fn, class T>
+    [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
+      auto&& [... ts] = std::forward<T>(t);
+      return std::forward<Fn>(fn)(std::forward<decltype(ts)>(ts)...);
+    }
+    ```
 
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp)

@@ -107,7 +107,7 @@ static_assert(2 == size<foo>);
 
 ```cpp
 template <class T>
-[[nodiscard]] consteval auto type_name(const T& = {}) noexcept;
+[[nodiscard]] constexpr auto type_name(const T& = {}) noexcept;
 ```
 
 ```cpp
@@ -130,7 +130,7 @@ static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 
 ```cpp
 template <std::size_t N, class T> requires (N < size<T>)
-[[nodiscard]] consteval auto member_name(const T& = {}) noexcept;
+[[nodiscard]] constexpr auto member_name(const T& = {}) noexcept;
 ```
 
 ```cpp
@@ -223,7 +223,7 @@ static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 ```
 
 ```cpp
-consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 ```
 
 ```cpp

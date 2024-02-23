@@ -70,7 +70,7 @@ struct member_name_info {
 };
 }  // namespace detail
 
-template<auto&&...> consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 
 template <class T, std::size_t Size>
 struct fixed_string {

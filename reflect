@@ -90,8 +90,8 @@ static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
 static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 
 template <class Fn, class T>
-[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
-  #if __cpp_structure_bindings_can_introduce_a_pack
+[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, [[maybe_unused]]/*for overriding*/auto...) noexcept {
+  #if __cpp_structured_bindings_can_introduce_a_pack
     auto&& [... ts] = REFLECT_FWD(t);
     return REFLECT_FWD(fn)(REFLECT_FWD(ts)...);
   #else

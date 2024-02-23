@@ -268,10 +268,10 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
 - How to extend number of members to be reflected (default: 64)?
 
-    > Overload `reflect::visit` overload
+    > Override `visit`, for example:
 
     ```cpp
-    template <class Fn, class T>
+    template <class Fn, class T> // requires https://wg21.link/P1061
     [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
       auto&& [... ts] = std::forward<T>(t);
       return std::forward<Fn>(fn)(std::forward<decltype(ts)>(ts)...);

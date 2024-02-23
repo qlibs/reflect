@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/W3foMK7Me">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/qYjP41vP5">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/GEoGqTWxx">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -18,11 +18,11 @@
 
 ### Requirements
 
-- C++20 ([gcc-12+](https://godbolt.org/z/qehrne83x), [clang-15+](https://godbolt.org/z/qehrne83x), [msvc-19.36+](https://godbolt.org/z/qehrne83x))
+- C++20 ([gcc-12+](https://godbolt.org/z/W3foMK7Me), [clang-15+](https://godbolt.org/z/W3foMK7Me), [msvc-19.36+](https://godbolt.org/z/W3foMK7Me))
 
 ---
 
-### Hello world (https://godbolt.org/z/qYjP41vP5)
+### Hello world (https://godbolt.org/z/GEoGqTWxx)
 
 ```cpp
 #include <reflect>

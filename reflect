@@ -194,23 +194,35 @@ static_assert(([] {
 
 template <class T>
 [[nodiscard]] consteval auto type_name(const T& = {}) noexcept {
-  constexpr std::string_view name = detail::function_name<T>();
-  constexpr std::string_view type_name = name.substr(detail::type_name_info::begin, name.find(detail::type_name_info::end) - detail::type_name_info::begin);
-  constexpr std::string_view function_name = type_name.substr(type_name.find_last_of("::")+1);
-  static_assert(std::size(function_name) > 0u);
-  return fixed_string<std::remove_cvref_t<decltype(function_name[0])>, std::size(function_name)>{std::data(function_name)};
+  constexpr std::string_view function_name = detail::function_name<T>();
+  constexpr std::string_view qualified_type_name = function_name.substr(detail::type_name_info::begin, function_name.find(detail::type_name_info::end) - detail::type_name_info::begin);
+  constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
+  constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
+  static_assert(std::size(type_name) > 0u);
+  return fixed_string<std::remove_cvref_t<decltype(type_name[0])>, std::size(type_name)>{std::data(type_name)};
 }
 
+namespace test {
+struct empty {};
+struct foo {};
+struct bar {};
+template <class T> struct foo_t { };
+namespace ns::inline v1 {
+  template<auto...> struct bar_v { };
+} // ns
+} // test
 static_assert(([] {
-  struct empty {};
-  struct foo {};
-  struct bar {};
-  static_assert(std::string_view{"empty"} == type_name<empty>());
-  static_assert(std::string_view{"empty"} == type_name(empty{}));
-  static_assert(std::string_view{"foo"} == type_name<foo>());
-  static_assert(std::string_view{"foo"} == type_name(foo{}));
-  static_assert(std::string_view{"bar"} == type_name<bar>());
-  static_assert(std::string_view{"bar"} == type_name(bar{}));
+  static_assert(std::string_view{"empty"} == type_name<test::empty>());
+  static_assert(std::string_view{"empty"} == type_name(test::empty{}));
+  static_assert(std::string_view{"foo"} == type_name<test::foo>());
+  static_assert(std::string_view{"foo"} == type_name(test::foo{}));
+  static_assert(std::string_view{"bar"} == type_name<test::bar>());
+  static_assert(std::string_view{"bar"} == type_name(test::bar{}));
+  static_assert(std::string_view{"foo_t"} == type_name<test::foo_t<void>>());
+  static_assert(std::string_view{"foo_t"} == type_name<test::foo_t<int>>());
+  static_assert(std::string_view{"foo_t"} == type_name<test::foo_t<test::ns::bar_v<42>>>());
+  static_assert(std::string_view{"bar_v"} == type_name<test::ns::bar_v<42>>());
+  static_assert(std::string_view{"bar_v"} == type_name<test::ns::bar_v<>>());
 }(), true));
 
 template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>

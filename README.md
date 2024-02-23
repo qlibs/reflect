@@ -282,9 +282,9 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
     ```
     CPMAddPackage(
-        Name reflect
-        GITHUB_REPOSITORY boost-ext/reflect
-        GIT_TAG v1.0.1
+      Name reflect
+      GITHUB_REPOSITORY boost-ext/reflect
+      GIT_TAG v1.0.1
     )
     add_library(reflect INTERFACE)
     target_include_directories(reflect SYSTEM INTERFACE ${reflect_SOURCE_DIR})

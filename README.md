@@ -223,7 +223,7 @@ static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 ```
 
 ```cpp
-template<auto...> consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+template<auto&&...> consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 ```
 
 ```cpp
@@ -268,7 +268,7 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
 - How to extend number of members to be reflected (default: 64)?
 
-    > Override `visit`, for example:
+    > Override `visit`, for example - https://godbolt.org/z/7P7Kfe6Yr
 
     ```cpp
     template <class Fn, class T> // requires https://wg21.link/P1061

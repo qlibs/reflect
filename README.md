@@ -278,10 +278,6 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
     }
     ```
 
-- Doesn't compile with MSVC `/W4`?
-
-    > MSVC, even with /std:c++20 is missing predifined `add/and/or/not` unless `#include <iso646.h>` is added - https://godbolt.org/z/9MME9o66K.
-
 - How to integrate with CMake/CPM?
 
     ```

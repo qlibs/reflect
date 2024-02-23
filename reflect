@@ -49,8 +49,8 @@ static_assert('a' == nth_pack_element<0>('a', 1, true));
 static_assert(1 == nth_pack_element<1>('a', 1, true));
 static_assert(true == nth_pack_element<2>('a', 1, true));
 
-template<auto  V> [[nodiscard]] consteval auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
-template<class T> [[nodiscard]] consteval auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
+template<auto  V> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
+template<class T> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
 struct type_name_info {
   static constexpr auto name = function_name<REFLECT_STRUCT>();
@@ -71,7 +71,7 @@ struct member_name_info {
 };
 }  // namespace detail
 
-consteval auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 
 template <class T, std::size_t Size>
 struct fixed_string {
@@ -193,7 +193,7 @@ static_assert(([] {
 }(), true));
 
 template <class T>
-[[nodiscard]] consteval auto type_name(const T& = {}) noexcept {
+[[nodiscard]] constexpr auto type_name(const T& = {}) noexcept {
   constexpr std::string_view function_name = detail::function_name<T>();
   constexpr std::string_view qualified_type_name = function_name.substr(detail::type_name_info::begin, function_name.find(detail::type_name_info::end) - detail::type_name_info::begin);
   constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
@@ -276,7 +276,7 @@ static_assert(([] {
 }(), true));
 
 template <std::size_t N, class T> requires (N < size<T>)
-[[nodiscard]] consteval auto member_name(const T& = {}) noexcept {
+[[nodiscard]] constexpr auto member_name(const T& = {}) noexcept {
   constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
   constexpr std::string_view member_name = tmp_member_name.substr(tmp_member_name.find_last_of(detail::member_name_info::begin)+1);

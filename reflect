@@ -34,7 +34,7 @@ namespace reflect::inline v1_0_1 {
 namespace detail {
 template<class T> extern const T ext{};
 template<class T> struct any { template<class R> constexpr operator R() const noexcept; };
-template<auto...> struct auto_ { constexpr explicit(false) auto_(auto&&) noexcept { } };
+template<auto...> struct auto_ { constexpr explicit(false) auto_(auto&&...) noexcept { } };
 template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
 template<std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
@@ -333,9 +333,7 @@ template<fixed_string Name, class T> requires has_member_name<T, Name>
 constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) {
     constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
-      std::size_t i{};
-      ([&] { if constexpr (std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) { i = Ns; } }(), ...);
-      return i;
+      return (((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) ? Ns : decltype(Ns){}) + ...);
     }(std::make_index_sequence<size<std::remove_cvref_t<T>>>{});
     return detail::nth_pack_element<index>(REFLECT_FWD(args)...);
   }, REFLECT_FWD(t));

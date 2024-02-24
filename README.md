@@ -18,7 +18,7 @@
 
 ### Requirements
 
-- C++20 ([gcc-12+](https://godbolt.org/z/xPc19Moef), [clang-15+](https://godbolt.org/z/xPc19Moef), [msvc-19.36+](https://godbolt.org/z/xPc19Moef))
+- C++20 ([gcc-12+, clang-15+, msvc-19.36+](https://godbolt.org/z/xPc19Moef))
 
 ---
 

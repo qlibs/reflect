@@ -177,6 +177,27 @@ static_assert(true == get<"b">(f));
 ```
 
 ```cpp
+template<fixed_string... Members, class TSrc, class TDst>
+constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void;
+```
+
+```cpp
+struct foo { int a; int b; };
+struct bar { int a{}; int b{}; };
+
+bar b{};
+foo f{};
+
+copy(f, b);
+assert(b.a == f.a);
+assert(b.b == f.b);
+
+copy<"a">(f, b);
+assert(b.a == f.a);
+assert(0 == b.b);
+```
+
+```cpp
 template<template<class...> class R, class T>
 [[nodiscard]] constexpr auto to(T&& t) noexcept;
 ```

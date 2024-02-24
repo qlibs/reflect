@@ -12,7 +12,7 @@
 ### Features
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
-- Minimal API (see [#API](#api))
+- Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts)
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations)
 

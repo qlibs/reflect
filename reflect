@@ -39,8 +39,8 @@ template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
 template<std::size_t N> [[nodiscard]] constexpr decltype(auto) nth_pack_element(auto&&... args) noexcept {
   return [&]<auto... Is>(std::index_sequence<Is...>) -> decltype(auto) {
-    return [] (auto_<Is>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); }(REFLECT_FWD(args)...);
-  }(std::make_index_sequence<N>());
+    return [](auto_<Is>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); }(REFLECT_FWD(args)...);
+  }(std::make_index_sequence<N>{});
 }
 
 static_assert(1 == nth_pack_element<0>(1));

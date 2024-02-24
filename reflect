@@ -388,7 +388,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
 template<fixed_string... Members, class TSrc, class TDst>
 constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void {
-  constexpr auto contains = [](const auto name) {
+  constexpr auto contains = []([[maybe_unused]] const auto name) {
     return sizeof...(Members) == 0u or ((std::string_view{name} == std::string_view{Members}) or ...);
   };
   auto dst_view = to<std::tuple>(dst);

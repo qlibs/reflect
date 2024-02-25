@@ -237,7 +237,7 @@ static_assert(([] {
 }(), true));
 
 template <class T>
-[[nodiscard]] constexpr auto type_name(const T& = {}) noexcept {
+[[nodiscard]] constexpr auto type_name() noexcept {
   using type_name_info = detail::type_name_info<T>;
   constexpr std::string_view function_name = detail::function_name<T>();
   constexpr std::string_view qualified_type_name = function_name.substr(type_name_info::begin, function_name.find(type_name_info::end)-type_name_info::begin);
@@ -246,6 +246,9 @@ template <class T>
   static_assert(std::size(type_name) > 0u);
   return fixed_string<std::remove_cvref_t<decltype(type_name[0])>, std::size(type_name)>{std::data(type_name)};
 }
+
+template <class T>
+[[nodiscard]] constexpr auto type_name(const T&) noexcept { return type_name<T>(); }
 
 namespace test {
 struct empty { };
@@ -257,6 +260,7 @@ namespace ns::inline v1 {
 } // ns
 } // test
 static_assert(([] {
+  static_assert(std::string_view{"void"} == type_name<void>());
   static_assert(std::string_view{"int"} == type_name<int>());
   static_assert(std::string_view{"empty"} == type_name<test::empty>());
   static_assert(std::string_view{"empty"} == type_name(test::empty{}));

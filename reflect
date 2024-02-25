@@ -116,8 +116,6 @@ struct member_name_info {
 };
 }  // namespace detail
 
-constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
-
 template <class T, std::size_t Size>
 struct fixed_string {
   constexpr explicit(false) fixed_string(const T* str) { std::copy_n(str, Size, std::data(data)); }
@@ -248,7 +246,7 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] constexpr auto type_name(const T&) noexcept { return type_name<T>(); }
+[[nodiscard]] constexpr auto type_name(const T&) noexcept -> std::string_view { return type_name<T>(); }
 
 namespace test {
 struct empty { };
@@ -650,6 +648,34 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     expect(4 == fb.a and 0 == fb.b);
   }
 }(), true));
+
+template<class T>
+struct member {
+    std::string_view name;
+    std::string_view type;
+    T value;
+};
+
+template<class Fn, class T>
+constexpr auto for_each(Fn&& fn, T&& t) -> void {
+  [&]<auto... Ns>(std::index_sequence<Ns...>) {
+    (REFLECT_FWD(fn)(member<decltype(REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t))))>{member_name<Ns>(REFLECT_FWD(t)),
+                     type_name(reflect::get<Ns>(REFLECT_FWD(t))),
+                     REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t)))}), ...);
+  }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>>{});
+}
+
+static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
+  struct { int _1; int _2; } foo{._1=1, ._2=2};
+  auto sum = 0;
+  for_each([&](const auto& member) {
+    sum += member.value;
+  }, foo);
+  expect(1+2 == sum);
+}(), true));
+
+constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
+
 } // namespace reflect
 
 #undef REFLECT_FWD_LIKE

@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/xPc19Moef">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/rP1YfsxPf">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/7c4hhqf8v">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -22,7 +22,7 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/rP1YfsxPf)
+### Hello world (https://godbolt.org/z/7c4hhqf8v)
 
 ```cpp
 #include <reflect>
@@ -58,6 +58,13 @@ static_assert(B  == reflect::get<"b">(f));
 constexpr auto t = reflect::to<std::tuple>(f);
 static_assert(42 == std::get<0>(t));
 static_assert(B  == std::get<1>(t));
+
+int main() {
+  // reflect::for_each
+  reflect::for_each([](const auto& member) {
+    std::cout << member.name << ":" << member.type << "=" << member.value << '\n'; // prints a:int=42, b:E=B
+  }, f);
+}
 
 // and more (see API)...
 ```
@@ -208,6 +215,28 @@ struct baz { int a{}; int c{}; };
 
 const auto b = to<baz>(foo{.a=4, .b=2});
 assert(4 == b.a and 0 == b.c);
+```
+
+```cpp
+template<class T>
+struct member {
+    std::string_view name;
+    std::string_view type;
+    T value;
+};
+```
+
+```cpp
+template<class Fn, class T>
+constexpr auto for_each(Fn&& fn, T&& t) -> void;
+```
+
+```cpp
+struct foo { int a; int b; };
+
+reflect::for_each([](const auto& member) {
+  std::print("{}:{}={}", member.name, member.type, member.value); // prints a:int=4, b:int=2
+}, foo{.a=4, .b=2});
 ```
 
 ```cpp

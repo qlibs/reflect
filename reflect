@@ -60,23 +60,23 @@ static_assert('a' == nth_pack_element<0>('a', 1, true));
 static_assert(1 == nth_pack_element<1>('a', 1, true));
 static_assert(true == nth_pack_element<2>('a', 1, true));
 static_assert([] {
-	int a [[maybe_unused]] { };
-	return std::is_same_v<int&, decltype(nth_pack_element<0>(a))>;
+  [[maybe_unused]] int a{};
+  return std::is_same_v<int&, decltype(nth_pack_element<0>(a))>;
 }());
 
 static_assert([] {
-	const int a [[maybe_unused]] { };
-	return std::is_same_v<const int&, decltype(nth_pack_element<0>(a))>;
+  [[maybe_unused]] const int a{};
+  return std::is_same_v<const int&, decltype(nth_pack_element<0>(a))>;
 }());
 
 static_assert([] {
-	int a [[maybe_unused]] { };
-	return std::is_same_v<int&&, decltype(nth_pack_element<0>(static_cast<int&&>(a)))>;
+  [[maybe_unused]] int a{};
+  return std::is_same_v<int&&, decltype(nth_pack_element<0>(static_cast<int&&>(a)))>;
 }());
 
 static_assert([] {
-	const int a [[maybe_unused]] { };
-	return std::is_same_v<const int&&, decltype(nth_pack_element<0>(static_cast<const int&&>(a)))>;
+  [[maybe_unused]] const int a{};
+  return std::is_same_v<const int&&, decltype(nth_pack_element<0>(static_cast<const int&&>(a)))>;
 }());
 
 template<auto  V> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }

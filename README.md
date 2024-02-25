@@ -139,7 +139,8 @@ static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 
 ```cpp
 template<std::size_t N, class T>
-  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>)
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and 
+            N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
 ```
 

@@ -44,7 +44,7 @@ template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
 
 template<std::size_t N>
-constexpr decltype(auto) nth_pack_element_impl = [] <auto... Ns>(std::index_sequence<Ns...>) {
+constexpr decltype(auto) nth_pack_element_impl = []<auto... Ns>(std::index_sequence<Ns...>) {
   return [](auto_<Ns>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); };
 }(std::make_index_sequence<N>{});
 
@@ -237,14 +237,14 @@ static_assert(([] {
 }(), true));
 
 template <class T>
-[[nodiscard]] constexpr auto type_name() noexcept {
+[[nodiscard]] constexpr auto type_name() noexcept -> std::string_view {
   using type_name_info = detail::type_name_info<T>;
   constexpr std::string_view function_name = detail::function_name<T>();
   constexpr std::string_view qualified_type_name = function_name.substr(type_name_info::begin, function_name.find(type_name_info::end)-type_name_info::begin);
   constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
   constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
   static_assert(std::size(type_name) > 0u);
-  return fixed_string<std::remove_cvref_t<decltype(type_name[0])>, std::size(type_name)>{std::data(type_name)};
+  return type_name;
 }
 
 template <class T>
@@ -279,7 +279,7 @@ static_assert(([] {
 
 template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
-[[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept {
+[[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept -> std::string_view {
   std::array<std::string_view, Max-Min+1> enum_names{};
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
       ([&]{
@@ -328,12 +328,12 @@ static_assert(([] {
 }(), true));
 
 template <std::size_t N, class T> requires (N < size<T>)
-[[nodiscard]] constexpr auto member_name(const T& = {}) noexcept {
+[[nodiscard]] constexpr auto member_name(const T& = {}) noexcept -> std::string_view {
   constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
   constexpr std::string_view member_name = tmp_member_name.substr(tmp_member_name.find_last_of(detail::member_name_info::begin)+1);
   static_assert(std::size(member_name) > 0u);
-  return fixed_string<std::remove_cvref_t<decltype(member_name[0])>, std::size(member_name)>{std::data(member_name)};
+  return member_name;
 }
 
 static_assert(([] {
@@ -409,7 +409,7 @@ template<fixed_string Name, class T> requires has_member_name<T, Name>
 constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) {
     constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
-      return (((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) ? Ns : decltype(Ns){}) + ...);
+      return (((std::string_view{Name} == member_name<Ns, std::remove_cvref_t<T>>()) ? Ns : decltype(Ns){}) + ...);
     }(std::make_index_sequence<size<std::remove_cvref_t<T>>>{});
     return detail::nth_pack_element<index>(REFLECT_FWD(args)...);
   }, REFLECT_FWD(t));
@@ -491,13 +491,13 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 template<fixed_string... Members, class TSrc, class TDst>
 constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void {
   constexpr auto contains = []([[maybe_unused]] const auto name) {
-    return sizeof...(Members) == 0u or ((std::string_view{name} == std::string_view{Members}) or ...);
+    return sizeof...(Members) == 0u or ((name == std::string_view{Members}) or ...);
   };
   auto dst_view = to<std::tuple>(dst);
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
     ([&] {
-      if constexpr (contains(member_name<Ns, TDst>()) and requires { std::get<Ns>(dst_view) = get<member_name<Ns, TDst>()>(src); }) {
-        std::get<Ns>(dst_view) = get<member_name<Ns, TDst>()>(src);
+      if constexpr (contains(member_name<Ns, TDst>()) and requires { std::get<Ns>(dst_view) = get<fixed_string<std::remove_cvref_t<decltype(member_name<Ns, TDst>()[0])>, std::size(member_name<Ns, TDst>())>(std::data(member_name<Ns, TDst>()))>(src); }) {
+        std::get<Ns>(dst_view) = get<fixed_string<std::remove_cvref_t<decltype(member_name<Ns, TDst>()[0])>, std::size(member_name<Ns, TDst>())>(std::data(member_name<Ns, TDst>()))>(src);
       }
     }(), ...);
   }(std::make_index_sequence<size<TDst>>{});

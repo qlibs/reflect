@@ -62,10 +62,12 @@ static_assert(B  == std::get<1>(t));
 int main() {
   // reflect::for_each
   reflect::for_each([](const auto& member) {
-    std::cout << member.name << ":" 
-              << member.type << "=" 
-              << member.value << '\n';
-  }, f); // prints 'a:int=42, b:E=B'
+    std::print("{}.{}:{}={}\n", 
+        reflect::type_name(f),   // --- output --- 
+        member.name,             // foo.a:int=42
+        member.type,             // foo.b:E=B
+        member.value);           // --------------
+  }, f);
 }
 
 // and more (see API)...

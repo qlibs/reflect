@@ -651,9 +651,9 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
 template<class T>
 struct member {
-    std::string_view name;
-    std::string_view type;
-    T value;
+  std::string_view name;
+  std::string_view type;
+  T value;
 };
 
 template<class Fn, class T>

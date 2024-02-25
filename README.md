@@ -222,9 +222,9 @@ assert(4 == b.a and 0 == b.c);
 ```cpp
 template<class T>
 struct member {
-    std::string_view name;
-    std::string_view type;
-    T value;
+  std::string_view name;
+  std::string_view type;
+  T value;
 };
 ```
 

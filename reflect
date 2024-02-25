@@ -32,8 +32,7 @@
 struct REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
 /**
- * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect)
- * Try it online - https://godbolt.org/z/EPhY5M3TE
+ * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect) / https://godbolt.org/z/xPc19Moef
  */
 namespace reflect::inline v1_0_3 {
 namespace detail {
@@ -44,11 +43,11 @@ template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
 
 template<std::size_t N>
-constexpr decltype(auto) nth_pack_element_impl = []<auto... Ns>(std::index_sequence<Ns...>) {
+constexpr auto nth_pack_element_impl = []<auto... Ns>(std::index_sequence<Ns...>) -> decltype(auto) {
   return [](auto_<Ns>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); };
 }(std::make_index_sequence<N>{});
 
-template<std::size_t N, class...Ts> requires(N < sizeof...(Ts))
+template<std::size_t N, class...Ts> requires (N < sizeof...(Ts))
 [[nodiscard]] constexpr decltype(auto) nth_pack_element(Ts&&...args) noexcept {
   return nth_pack_element_impl<N>(REFLECT_FWD(args)...);
 }
@@ -133,7 +132,7 @@ static_assert(3u == std::size(fixed_string{"foo"}));
 static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
 static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 
-template <class Fn, class T>
+template <class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
   #if __cpp_structured_bindings >= 202401L
     auto&& [... ts] = REFLECT_FWD(t);
@@ -220,7 +219,7 @@ static_assert(([] {
   static_assert(2 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, two{}));
 }(), true));
 
-template<class T>
+template<class T> requires std::is_aggregate_v<T>
 inline constexpr auto size = visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, detail::ext<T>);
 
 static_assert(([] {
@@ -325,7 +324,7 @@ static_assert(([] {
     static_assert(std::string_view{"foo"} == enum_name(e));
 }(), true));
 
-template <std::size_t N, class T> requires (N < size<T>)
+template <std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>)
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept -> std::string_view {
   constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
@@ -347,7 +346,7 @@ static_assert(([] {
   static_assert(std::string_view{"bar"} == member_name<2>(foo{}));
 }(), true));
 
-template<std::size_t N, class T> requires (N < size<std::remove_cvref_t<T>>)
+template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(REFLECT_FWD(args)...); }, REFLECT_FWD(t));
 }
@@ -390,7 +389,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   }
 }(), true));
 
-template <class T, fixed_string Name>
+template <class T, fixed_string Name>// requires is_aggregate_v<T>
 concept has_member_name = []<auto... Ns>(std::index_sequence<Ns...>) {
   return ((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) or ...);
 }(std::make_index_sequence<size<std::remove_cvref_t<T>>>{});
@@ -403,7 +402,8 @@ static_assert(([] {
   static_assert(not has_member_name<foo, "">);
 }(), true));
 
-template<fixed_string Name, class T> requires has_member_name<T, Name>
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
 constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) {
     constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
@@ -452,6 +452,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 }(), true));
 
 template<template<class...> class R, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto to(T&& t) noexcept {
    if constexpr (std::is_lvalue_reference_v<decltype(t)>) {
     return visit([](auto&&... args) { return R<decltype(REFLECT_FWD(args))...>{REFLECT_FWD(args)...}; }, t);
@@ -487,6 +488,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 }(), true));
 
 template<fixed_string... Members, class TSrc, class TDst>
+  requires (std::is_aggregate_v<TSrc> and std::is_aggregate_v<TDst>)
 constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void {
   constexpr auto contains = []([[maybe_unused]] const auto name) {
     return sizeof...(Members) == 0u or ((name == std::string_view{Members}) or ...);
@@ -581,6 +583,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 }(), true));
 
 template<class R, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto to(T&& t) noexcept {
   R r{};
   copy(REFLECT_FWD(t), r);
@@ -651,27 +654,41 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
 template<class T>
 struct member {
+  std::size_t size_of;
+  std::size_t alignment_of;
+  std::size_t offset_of;
   std::string_view name;
   std::string_view type;
   T value;
 };
 
 template<class Fn, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void {
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    (REFLECT_FWD(fn)(member<decltype(REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t))))>{member_name<Ns>(REFLECT_FWD(t)),
+    (REFLECT_FWD(fn)(member<decltype(REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t))))>{
+                     sizeof(reflect::get<Ns>(REFLECT_FWD(t))),
+                     alignof(decltype(reflect::get<Ns>(REFLECT_FWD(t)))),
+                     {},
+                     member_name<Ns>(REFLECT_FWD(t)),
                      type_name(reflect::get<Ns>(REFLECT_FWD(t))),
                      REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t)))}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>>{});
 }
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
-  struct { int _1; int _2; } foo{._1=1, ._2=2};
-  auto sum = 0;
+  struct { short _1; int _2; } foo{._1=1, ._2=2};
+  auto sum = 0u;
+  auto size_of = 0u;
+  auto alignment_of = 0u;
   for_each([&](const auto& member) {
     sum += member.value;
+    size_of += member.size_of;
+    alignment_of += member.alignment_of;
   }, foo);
   expect(1+2 == sum);
+  expect(sizeof(short)+sizeof(int) == size_of);
+  expect(alignof(short)+alignof(int) == alignment_of);
 }(), true));
 
 constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time

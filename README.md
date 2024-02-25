@@ -62,8 +62,8 @@ static_assert(B  == std::get<1>(t));
 int main() {
   // reflect::for_each
   reflect::for_each([](const auto& member) {
-    std::print("{}.{}:{}={}\n", 
-        reflect::type_name(f),   // --- output --- 
+    std::print("{}.{}:{}={}\n",
+        reflect::type_name(f),   // --- output ---
         member.name,             // foo.a:int=42
         member.type,             // foo.b:E=B
         member.value);           // --------------
@@ -79,6 +79,7 @@ int main() {
 
 ```cpp
 template <class Fn, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto visit(Fn&& fn, T&& t) noexcept;
 ```
 
@@ -88,7 +89,9 @@ static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}))
 ```
 
 ```cpp
-template<class T> inline constexpr auto size = /*unspecified*/
+template<class T>
+  requires std::is_aggregate_v<T>
+inline constexpr auto size = /*unspecified*/
 ```
 
 ```cpp
@@ -98,6 +101,7 @@ static_assert(2 == size<foo>);
 
 ```cpp
 template <class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto type_name(const T& = {}) noexcept;
 ```
 
@@ -120,7 +124,8 @@ static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 ```
 
 ```cpp
-template <std::size_t N, class T> requires (N < size<T>)
+template <std::size_t N, class T>
+  requires (std::is_aggregate_v<T> and N < size<T>)
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept;
 ```
 
@@ -133,7 +138,8 @@ static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 ```
 
 ```cpp
-template<std::size_t N, class T> requires (N < size<std::remove_cvref_t<T>>)
+template<std::size_t N, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
 ```
 
@@ -145,7 +151,8 @@ static_assert(true == get<1>(f));
 ```
 
 ```cpp
-template <class T, fixed_string Name> concept has_member_name = /*unspecified*/
+template <class T, fixed_string Name> requires std::is_aggregate_v<T>
+concept has_member_name = /*unspecified*/
 ```
 
 ```cpp
@@ -169,6 +176,7 @@ static_assert(true == get<"b">(f));
 
 ```cpp
 template<fixed_string... Members, class TSrc, class TDst>
+  requires (std::is_aggregate_v<TSrc> and std::is_aggregate_v<TDst>)
 constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void;
 ```
 
@@ -190,6 +198,7 @@ assert(0 == b.b);
 
 ```cpp
 template<template<class...> class R, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto to(T&& t) noexcept;
 ```
 
@@ -224,6 +233,9 @@ assert(4 == b.a and 0 == b.c);
 ```cpp
 template<class T>
 struct member {
+  std::size_t size_of;
+  std::size_t alignment_of;
+  std::size_t offset_of;
   std::string_view name;
   std::string_view type;
   T value;
@@ -232,6 +244,7 @@ struct member {
 
 ```cpp
 template<class Fn, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void;
 ```
 

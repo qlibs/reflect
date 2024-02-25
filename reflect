@@ -29,7 +29,7 @@
               ::std::remove_reference_t<decltype(__VA_ARGS__)>&, \
               ::std::remove_reference_t<decltype(__VA_ARGS__)>&&>>(__VA_ARGS__)
 
-struct REFLECT_STRUCT { REFLECT_STRUCT* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
+struct REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
 /**
  * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect)
@@ -82,10 +82,25 @@ static_assert([] {
 template<auto  V> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 template<class T> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
+template<class>
 struct type_name_info {
+  static constexpr auto name = function_name<void>();
+  static constexpr auto begin = name.find("void");
+  static constexpr auto end = name.substr(begin+std::size(std::string_view{"void"}));
+};
+
+template<class T> requires std::is_class_v<T>
+struct type_name_info<T> {
   static constexpr auto name = function_name<REFLECT_STRUCT>();
   static constexpr auto begin = name.find("REFLECT_STRUCT");
   static constexpr auto end = name.substr(begin+std::size(std::string_view{"REFLECT_STRUCT"}));
+};
+
+template<class T> requires std::is_enum_v<T>
+struct type_name_info<T> {
+  static constexpr auto name = function_name<REFLECT_STRUCT::ENUM>();
+  static constexpr auto begin = name.find("REFLECT_STRUCT::ENUM");
+  static constexpr auto end = name.substr(begin+std::size(std::string_view{"REFLECT_STRUCT::ENUM"}));
 };
 
 struct enum_name_info {
@@ -223,8 +238,9 @@ static_assert(([] {
 
 template <class T>
 [[nodiscard]] constexpr auto type_name(const T& = {}) noexcept {
+  using type_name_info = detail::type_name_info<T>;
   constexpr std::string_view function_name = detail::function_name<T>();
-  constexpr std::string_view qualified_type_name = function_name.substr(detail::type_name_info::begin, function_name.find(detail::type_name_info::end) - detail::type_name_info::begin);
+  constexpr std::string_view qualified_type_name = function_name.substr(type_name_info::begin, function_name.find(type_name_info::end)-type_name_info::begin);
   constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
   constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
   static_assert(std::size(type_name) > 0u);
@@ -233,7 +249,7 @@ template <class T>
 
 namespace test {
 struct empty { };
-struct foo { };
+struct foo { using type = int; enum E { }; };
 struct bar { };
 template <class T> struct foo_t { };
 namespace ns::inline v1 {
@@ -241,6 +257,7 @@ namespace ns::inline v1 {
 } // ns
 } // test
 static_assert(([] {
+  static_assert(std::string_view{"int"} == type_name<int>());
   static_assert(std::string_view{"empty"} == type_name<test::empty>());
   static_assert(std::string_view{"empty"} == type_name(test::empty{}));
   static_assert(std::string_view{"foo"} == type_name<test::foo>());
@@ -252,6 +269,8 @@ static_assert(([] {
   static_assert(std::string_view{"foo_t"} == type_name<test::foo_t<test::ns::bar_v<42>>>());
   static_assert(std::string_view{"bar_v"} == type_name<test::ns::bar_v<42>>());
   static_assert(std::string_view{"bar_v"} == type_name<test::ns::bar_v<>>());
+  static_assert(std::string_view{"int"} == type_name(test::foo::type{}));
+  static_assert(std::string_view{"E"} == type_name(test::foo::E{}));
 }(), true));
 
 template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
@@ -364,8 +383,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     }
 
     {
-      auto&& rvalue = get<0>(foo{});
-      static_assert(std::is_same_v<decltype(rvalue), int&&>);
+      static_assert(std::is_same_v<decltype(get<0>(foo{})), int&&>);
     }
   }
 }(), true));
@@ -426,8 +444,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     }
 
     {
-      auto&& rvalue = get<"i">(foo{});
-      static_assert(std::is_same_v<decltype(rvalue), int&&>);
+      static_assert(std::is_same_v<decltype(get<"i">(foo{})), int&&>);
     }
   }
 }(), true));

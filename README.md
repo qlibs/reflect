@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/xPc19Moef">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/EPhY5M3TE">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/rP1YfsxPf">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -22,64 +22,44 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/EPhY5M3TE)
+### Hello world (https://godbolt.org/z/rP1YfsxPf)
 
 ```cpp
 #include <reflect>
 
-int main() {
-  struct foo { int a; int b; };
-  enum E { A, B };
+enum E { A, B };
+struct foo { int a; E b; };
 
-  // reflect::visit
-  static_assert(2 == reflect::visit([](auto&&... args) { return sizeof...(args); }, foo{}));
+constexpr auto f = foo{.a = 42, .b = B};
 
-  // reflect::size
-  static_assert(2 == reflect::size<foo>);
+// reflect::size
+static_assert(2 == reflect::size<foo>);
 
-  // reflect::type_name
-  static_assert("foo"sv == reflect::type_name<foo>());
-  static_assert("foo"sv == reflect::type_name(foo{}));
+// reflect::type_name
+static_assert("foo"sv == reflect::type_name(f));
+static_assert("int"sv == reflect::type_name(f.a));
+static_assert("E"sv   == reflect::type_name(f.b));
 
-  // reflect::enum_name
-  static_assert("A"sv == reflect::enum_name(E::A));
-  static_assert("B"sv == reflect::enum_name(E::B));
+// reflect::enum_name
+static_assert("B"sv == reflect::enum_name(f.b));
 
-  // reflect::member_name
-  static_assert("a"sv == reflect::member_name<0, foo>());
-  static_assert("a"sv == reflect::member_name<0>(foo{}));
-  static_assert("b"sv == reflect::member_name<1, foo>());
-  static_assert("b"sv == reflect::member_name<1>(foo{}));
+// reflect::member_name
+static_assert("a"sv == reflect::member_name<0>(f));
+static_assert("b"sv == reflect::member_name<1>(f));
 
-  constexpr auto f = foo{.a=4, .b=2};
+// reflect::get
+static_assert(42 == reflect::get<0>(f)); // by index
+static_assert(B  == reflect::get<1>(f));
 
-  // reflect::get (SFINAE friendly)
-  static_assert(4 == reflect::get<0>(f)); // by index
-  static_assert(2 == reflect::get<1>(f));
-  static_assert(4 == reflect::get<"a">(f)); // by name
-  static_assert(2 == reflect::get<"b">(f));
+static_assert(42 == reflect::get<"a">(f)); // by name
+static_assert(B  == reflect::get<"b">(f));
 
-  // reflect::has_member_name
-  static_assert(reflect::has_member_name<foo, "a">);
-  static_assert(reflect::has_member_name<foo, "b">);
-  static_assert(not reflect::has_member_name<foo, "c">);
+// reflect::to
+constexpr auto t = reflect::to<std::tuple>(f);
+static_assert(42 == std::get<0>(t));
+static_assert(B  == std::get<1>(t));
 
-  struct bar { int a{}; int b{}; };
-
-  // reflect::to
-  constexpr auto t = reflect::to<std::tuple>(foo{.a=4, .b=2});
-  static_assert(4 == std::get<0>(t));
-  static_assert(2 == std::get<1>(t));
-
-  struct bar { int a{}; int c{}; };
-
-  // reflect::to (row polymorphism / name aware members copy)
-  constexpr auto b = reflect::to<bar>(foo{.a=4, .b=2});
-  static_assert(4 == b.a and 0 == b.c);
-
-  // reflect::debug
-  reflect::debug(f); // compile-error: debug<foo>
-}
+// and more (see API)...
 ```
 
 ---

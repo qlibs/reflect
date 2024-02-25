@@ -678,9 +678,9 @@ constexpr auto for_each(Fn&& fn, T&& t) -> void {
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
   struct { short _1; int _2; } foo{._1=1, ._2=2};
-  auto sum = 0u;
-  auto size_of = 0u;
-  auto alignment_of = 0u;
+  std::size_t sum{};
+  std::size_t size_of{};
+  std::size_t alignment_of{};
   for_each([&](const auto& member) {
     sum += member.value;
     size_of += member.size_of;

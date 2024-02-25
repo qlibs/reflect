@@ -24,7 +24,7 @@
 #endif
 
 #define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
-#define REFLECT_FWD_LIKE(T, ...)  \
+#define REFLECT_FWD_LIKE(T, ...) \
   static_cast<::std::conditional_t<::std::is_lvalue_reference_v<T>, \
               ::std::remove_reference_t<decltype(__VA_ARGS__)>&, \
               ::std::remove_reference_t<decltype(__VA_ARGS__)>&&>>(__VA_ARGS__)
@@ -44,8 +44,8 @@ template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
 
 template<std::size_t N>
-constexpr decltype(auto) nth_pack_element_impl = [] <auto...I>(std::index_sequence<I...>) {
-  return [](auto_<I>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); };
+constexpr decltype(auto) nth_pack_element_impl = [] <auto... Ns>(std::index_sequence<Ns...>) {
+  return [](auto_<Ns>&&..., auto&& nth, auto&&...) -> decltype(auto) { return REFLECT_FWD(nth); };
 }(std::make_index_sequence<N>{});
 
 template<std::size_t N, class...Ts> requires(N < sizeof...(Ts))

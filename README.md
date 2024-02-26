@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/xPc19Moef">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/KK5fnGW3f">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/sd579nWxr">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -22,7 +22,7 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/KK5fnGW3f)
+### Hello world (https://godbolt.org/z/sd579nWxr)
 
 ```cpp
 #include <reflect>
@@ -33,7 +33,7 @@ struct foo { int a; E b; };
 constexpr auto f = foo{.a = 42, .b = B};
 
 // reflect::size
-static_assert(2 == reflect::size<foo>);
+static_assert(2 == reflect::size(f));
 
 // reflect::type_name
 static_assert("foo"sv == reflect::type_name(f));
@@ -96,8 +96,9 @@ inline constexpr auto size = /*unspecified*/
 ```
 
 ```cpp
-struct foo { int a; int b; };
-static_assert(2 == size<foo>);
+struct foo { int a; int b; } f;
+static_assert(2 == size<foo>());
+static_assert(2 == size(f));
 ```
 
 ```cpp
@@ -125,7 +126,7 @@ static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 
 ```cpp
 template <std::size_t N, class T>
-  requires (std::is_aggregate_v<T> and N < size<T>)
+  requires (std::is_aggregate_v<T> and N < size<T>())
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept;
 ```
 
@@ -140,7 +141,7 @@ static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 ```cpp
 template<std::size_t N, class T>
   requires (std::is_aggregate_v<std::remove_cvref_t<T>> and
-            N < size<std::remove_cvref_t<T>>)
+            N < size<std::remove_cvref_t<T>>())
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
 ```
 

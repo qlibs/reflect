@@ -353,7 +353,7 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
     template <class Fn, class T> // requires https://wg21.link/P1061
     [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
       auto&& [... ts] = std::forward<T>(t);
-      return std::forward<Fn>(fn)(std::forward<decltype(ts)>(ts)...);
+      return std::forward<Fn>(fn)(std::forward_like<T>(ts)...);
     }
     ```
 

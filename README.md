@@ -65,10 +65,10 @@ int main() {
     std::print("{}.{}:{}={} ({}/{}/{})\n",
         reflect::type_name(f),
         member.name,
-        member.type,        /* ------ output ------ */
-        member.value,       /* foo.a:int=42 (4/4/0) */
-        member.size_of,     /* foo.b:E=B (4/4/4)    */
-        member.align_of,    /* -------------------- */
+        member.type,            //
+        member.value,           // foo.a:int=42 (4/4/0)
+        member.size_of,         // foo.b:E=B (4/4/4)
+        member.align_of,        //
         member.offset_of);
   }, f);
 }

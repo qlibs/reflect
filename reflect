@@ -26,8 +26,8 @@
 #define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 #define REFLECT_FWD_LIKE(T, ...) \
   static_cast<::std::conditional_t<::std::is_lvalue_reference_v<T>, \
-              typename ::std::remove_reference<decltype(__VA_ARGS__)>::type&, \
-              typename ::std::remove_reference<decltype(__VA_ARGS__)>::type&&>>(__VA_ARGS__)
+              ::std::remove_reference_t<decltype(__VA_ARGS__)>&, \
+              ::std::remove_reference_t<decltype(__VA_ARGS__)>&&>>(__VA_ARGS__)
 
 struct REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 

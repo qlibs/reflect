@@ -341,7 +341,7 @@ debug(foo{}); // compile-time error: debug(foo) is not defined
 
 - What is compile-time overhead of `reflect` library?
 
-    > `reflect` include takes < 20ms (that includes running all tests).
+    > `reflect` include takes ~.5s (that includes running all tests).
     The most expensive calls are `visit` and `enum_to_name` which timing will depend on the number of reflected elements and/or min/max values provided.
     There are no recursive template instantiations in the library.
 

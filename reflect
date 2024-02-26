@@ -23,13 +23,14 @@
 #define REFLECT_ENUM_MAX 64
 #endif
 
-#define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
-#define REFLECT_FWD_LIKE(T, ...) \
-  static_cast<::std::conditional_t<::std::is_lvalue_reference_v<T>, \
-              ::std::remove_reference_t<decltype(__VA_ARGS__)>&, \
-              ::std::remove_reference_t<decltype(__VA_ARGS__)>&&>>(__VA_ARGS__)
+namespace {
+template<bool Cond> struct REFLECT_FWD_LIKE { template<class T> using type = std::remove_reference_t<T>&&; };
+template<> struct REFLECT_FWD_LIKE<true> { template<class T> using type = std::remove_reference_t<T>&; };
+} // to speed up compilation times
 
-struct REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
+#define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
+#define REFLECT_FWD_LIKE(T, ...) static_cast<typename ::REFLECT_FWD_LIKE<::std::is_lvalue_reference_v<T>>::template type<decltype(__VA_ARGS__)>>(__VA_ARGS__)
+struct  REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
 /**
  * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect) / https://godbolt.org/z/xPc19Moef
@@ -705,8 +706,8 @@ template<std::size_t N, class T> requires std::is_aggregate_v<T>
   if constexpr (not N) {
     return {};
   } else {
-    constexpr auto offset = offset_of<N-1, T>() + sizeof(std::remove_cvref_t<decltype(get<N-1>(detail::ext<T>))>);
-    constexpr auto alignment = std::min(alignof(T), alignof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>));
+    constexpr auto offset = offset_of<N-1, T>() + size_of<N-1, T>();
+    constexpr auto alignment = std::min(alignof(T), align_of<N, T>());
     constexpr auto padding = offset % alignment;
     return offset + padding;
   }

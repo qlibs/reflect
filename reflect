@@ -115,7 +115,7 @@ struct member_name_info {
 };
 }  // namespace detail
 
-template <class T, std::size_t Size>
+template<class T, std::size_t Size>
 struct fixed_string {
   constexpr explicit(false) fixed_string(const T* str) { std::copy_n(str, Size, std::data(data)); }
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
@@ -123,7 +123,7 @@ struct fixed_string {
   [[nodiscard]] constexpr auto size() const { return Size; }
   std::array<T, Size> data{};
 };
-template <class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
+template<class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
 
 static_assert(0u == std::size(fixed_string{""}));
 static_assert(fixed_string{""} == fixed_string{""});
@@ -132,7 +132,7 @@ static_assert(3u == std::size(fixed_string{"foo"}));
 static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
 static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 
-template <class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
   #if __cpp_structured_bindings >= 202401L
     auto&& [... ts] = REFLECT_FWD(t);
@@ -233,7 +233,7 @@ static_assert(([] {
   static_assert(2 == size<two>);
 }(), true));
 
-template <class T>
+template<class T>
 [[nodiscard]] constexpr auto type_name() noexcept -> std::string_view {
   using type_name_info = detail::type_name_info<T>;
   constexpr std::string_view function_name = detail::function_name<T>();
@@ -244,14 +244,14 @@ template <class T>
   return type_name;
 }
 
-template <class T>
+template<class T>
 [[nodiscard]] constexpr auto type_name(const T&) noexcept -> std::string_view { return type_name<T>(); }
 
 namespace test {
 struct empty { };
 struct foo { using type = int; enum E { }; };
 struct bar { };
-template <class T> struct foo_t { };
+template<class T> struct foo_t { };
 namespace ns::inline v1 {
   template<auto...> struct bar_v { };
 } // ns
@@ -274,7 +274,7 @@ static_assert(([] {
   static_assert(std::string_view{"E"} == type_name(test::foo::E{}));
 }(), true));
 
-template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
+template<std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept -> std::string_view {
   std::array<std::string_view, Max-Min+1> enum_names{};
@@ -324,7 +324,7 @@ static_assert(([] {
     static_assert(std::string_view{"foo"} == enum_name(e));
 }(), true));
 
-template <std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>)
+template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>)
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept -> std::string_view {
   constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
   constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
@@ -389,7 +389,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   }
 }(), true));
 
-template <class T, fixed_string Name>// requires is_aggregate_v<T>
+template<class T, fixed_string Name>
 concept has_member_name = []<auto... Ns>(std::index_sequence<Ns...>) {
   return ((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) or ...);
 }(std::make_index_sequence<size<std::remove_cvref_t<T>>>{});
@@ -796,22 +796,35 @@ constexpr auto for_each(Fn&& fn, T&& t) -> void {
 }
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
-  struct { short _1; int _2; } foo{._1=1, ._2=2};
-  std::size_t sum{};
-  std::size_t size_of{};
-  std::size_t align_of{};
+  struct foo { short _1; int _2; } f{._1=1, ._2=2};
+
+  std::array<std::size_t, size<foo>> size_of{};
+  std::array<std::size_t, size<foo>> align_of{};
+  std::array<std::size_t, size<foo>> offset_of{};
+  std::array<std::string_view, size<foo>> name{};
+  std::array<std::string_view, size<foo>> type{};
+  std::array<std::common_type_t<short, int>, size<foo>> value{};
+
+  auto i = 0;
   for_each([&](const auto& member) {
-    sum += member.value;
-    size_of += member.size_of;
-    align_of += member.align_of;
-  }, foo);
-  expect(1+2 == sum);
-  expect(sizeof(short)+sizeof(int) == size_of);
-  expect(alignof(short)+alignof(int) == align_of);
+    size_of[i] = member.size_of;
+    align_of[i] = member.align_of;
+    offset_of[i] = member.offset_of;
+    name[i] = member.name;
+    type[i] = member.type;
+    value[i] = member.value;
+    ++i;
+  }, f);
+
+  expect(2 == i);
+  expect(sizeof(f._1) == size_of[0] and sizeof(f._2) == size_of[1]);
+  expect(alignof(short) == align_of[0] and alignof(int) == align_of[1]);
+  expect(0 == offset_of[0] and 4 == offset_of[1]);
+  expect(std::string_view{"_1"} == name[0] and std::string_view{"_2"} == name[1]);
+  expect(f._1 == value[0] and f._2 == value[1]);
 }(), true));
 
 constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
-
 } // namespace reflect
 
 #undef REFLECT_FWD_LIKE

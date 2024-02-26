@@ -62,11 +62,14 @@ static_assert(B  == std::get<1>(t));
 int main() {
   // reflect::for_each
   reflect::for_each([](const auto& member) {
-    std::print("{}.{}:{}={}\n",
-        reflect::type_name(f),   // --- output ---
-        member.name,             // foo.a:int=42
-        member.type,             // foo.b:E=B
-        member.value);           // --------------
+    std::print("{}.{}:{}={} ({}/{}/{})\n",
+        reflect::type_name(f),
+        member.name,
+        member.type,             // --- output ---
+        member.value,            // foo.a:int=42 (4/4/0)
+        member.size_of,          // foo.b:E=B (4/4/4)
+        member.align_of,         // --------------
+        member.offset_of);
   }, f);
 }
 
@@ -78,8 +81,7 @@ int main() {
 ### API
 
 ```cpp
-template <class Fn, class T>
-  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template <class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto visit(Fn&& fn, T&& t) noexcept;
 ```
 
@@ -89,8 +91,7 @@ static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}))
 ```
 
 ```cpp
-template<class T>
-  requires std::is_aggregate_v<T>
+template<class T> requires std::is_aggregate_v<T>
 inline constexpr auto size = /*unspecified*/
 ```
 
@@ -100,8 +101,7 @@ static_assert(2 == size<foo>);
 ```
 
 ```cpp
-template <class T>
-  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template <class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto type_name(const T& = {}) noexcept;
 ```
 
@@ -139,7 +139,7 @@ static_assert(std::string_view{"b"} == member_name<1>(foo{}));
 
 ```cpp
 template<std::size_t N, class T>
-  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and 
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and
             N < size<std::remove_cvref_t<T>>)
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
 ```
@@ -232,10 +232,41 @@ assert(4 == b.a and 0 == b.c);
 ```
 
 ```cpp
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of(const T&) -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of(const T&) -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of(const T&) -> std::size_t;
+```
+
+```cpp
+struct foo { int a; bool b; };
+
+static_assert(4 == size_of<0, foo>());
+static_assert(1 == size_of<1, foo>());
+static_assert(4 == align_of<0, foo>());
+static_assert(1 == align_of<1, foo>());
+static_assert(0 == offset_of<0, foo>());
+static_assert(4 == offset_of<1, foo>());
+```
+
+```cpp
 template<class T>
 struct member {
   std::size_t size_of;
-  std::size_t alignment_of;
+  std::size_t align_of;
   std::size_t offset_of;
   std::string_view name;
   std::string_view type;

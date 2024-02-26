@@ -26,8 +26,8 @@
 #define REFLECT_FWD(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 #define REFLECT_FWD_LIKE(T, ...) \
   static_cast<::std::conditional_t<::std::is_lvalue_reference_v<T>, \
-              ::std::remove_reference_t<decltype(__VA_ARGS__)>&, \
-              ::std::remove_reference_t<decltype(__VA_ARGS__)>&&>>(__VA_ARGS__)
+              typename ::std::remove_reference<decltype(__VA_ARGS__)>::type&, \
+              typename ::std::remove_reference<decltype(__VA_ARGS__)>::type&&>>(__VA_ARGS__)
 
 struct REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
@@ -652,10 +652,129 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   }
 }(), true));
 
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of() -> std::size_t {
+  return sizeof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>);
+}
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of(const T&) -> std::size_t {
+  return size_of<N, T>();
+}
+
+static_assert(([] {
+  struct s {
+    float a;
+    char b;
+    char bb;
+    int c;
+  };
+
+  static_assert(sizeof(float) == size_of<0, s>());
+  static_assert(sizeof(char) == size_of<1, s>());
+  static_assert(sizeof(char) == size_of<2, s>());
+  static_assert(sizeof(int) == size_of<3, s>());
+}(), true));
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of() -> std::size_t {
+  return alignof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>);
+}
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of(const T&) -> std::size_t {
+  return align_of<N, T>();
+}
+
+static_assert(([] {
+  struct s {
+    float a;
+    char b;
+    char bb;
+    int c;
+  };
+
+  static_assert(alignof(float) == align_of<0, s>());
+  static_assert(alignof(char) == align_of<1, s>());
+  static_assert(alignof(char) == align_of<2, s>());
+  static_assert(alignof(int) == align_of<3, s>());
+}(), true));
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of() -> std::size_t {
+  if constexpr (not N) {
+    return {};
+  } else {
+    constexpr auto offset = offset_of<N-1, T>() + sizeof(std::remove_cvref_t<decltype(get<N-1>(detail::ext<T>))>);
+    constexpr auto alignment = std::min(alignof(T), alignof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>));
+    constexpr auto padding = offset % alignment;
+    return offset + padding;
+  }
+}
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of(const T&) -> std::size_t {
+  return offset_of<N, T>();
+}
+
+static_assert(([] {
+  struct s {
+    float a;
+    char b;
+    char bb;
+    int c;
+  };
+
+#pragma pack(push, 1)
+  struct s2 {
+    float a;
+    char b;
+    char bb;
+    int c;
+    double d;
+    char e;
+  };
+#pragma pack(pop)
+
+  struct a {
+    int i;
+    int j;
+  };
+
+  struct b {
+    int i;
+    int k;
+  };
+
+  struct al {
+    char a;
+    int b;
+    char c;
+  };
+
+  static_assert(offset_of<0, a>() == 0);
+  static_assert(offset_of<1, a>() == sizeof(int));
+  static_assert(offset_of<0, b>() == 0);
+  static_assert(offset_of<1, b>() == sizeof(int));
+  static_assert(offset_of<0, s>() == 0);
+  static_assert(offset_of<1, s>() == sizeof(float));
+  static_assert(offset_of<2, s>() == sizeof(float) + sizeof(char));
+  static_assert(offset_of<3, s>() == alignof(s)*2);
+  static_assert(offset_of<0, s2>() == 0);
+  static_assert(offset_of<1, s2>() == sizeof(float));
+  static_assert(offset_of<2, s2>() == sizeof(float) + sizeof(char));
+  static_assert(offset_of<3, s2>() == sizeof(float) + sizeof(char) + sizeof(char));
+  static_assert(offset_of<4, s2>() == sizeof(float) + sizeof(char) + sizeof(char) + sizeof(int));
+  static_assert(offset_of<5, s2>() == sizeof(float) + sizeof(char) + sizeof(char) + sizeof(int) + sizeof(double));
+  static_assert(offset_of<0, al>() == 0);
+  static_assert(offset_of<1, al>() == sizeof(char)*2);
+  static_assert(offset_of<2, al>() == sizeof(char)*2 + sizeof(int));
+}(), true));
+
 template<class T>
 struct member {
   std::size_t size_of;
-  std::size_t alignment_of;
+  std::size_t align_of;
   std::size_t offset_of;
   std::string_view name;
   std::string_view type;
@@ -666,13 +785,13 @@ template<class Fn, class T>
   requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void {
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    (REFLECT_FWD(fn)(member<decltype(REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t))))>{
-                     sizeof(reflect::get<Ns>(REFLECT_FWD(t))),
-                     alignof(decltype(reflect::get<Ns>(REFLECT_FWD(t)))),
-                     {},
+    (REFLECT_FWD(fn)(member<decltype(reflect::get<Ns>(REFLECT_FWD(t)))>{
+                     size_of<Ns>(REFLECT_FWD(t)),
+                     align_of<Ns>(REFLECT_FWD(t)),
+                     offset_of<Ns>(REFLECT_FWD(t)),
                      member_name<Ns>(REFLECT_FWD(t)),
                      type_name(reflect::get<Ns>(REFLECT_FWD(t))),
-                     REFLECT_FWD(reflect::get<Ns>(REFLECT_FWD(t)))}), ...);
+                     reflect::get<Ns>(REFLECT_FWD(t))}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>>{});
 }
 
@@ -680,15 +799,15 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   struct { short _1; int _2; } foo{._1=1, ._2=2};
   std::size_t sum{};
   std::size_t size_of{};
-  std::size_t alignment_of{};
+  std::size_t align_of{};
   for_each([&](const auto& member) {
     sum += member.value;
     size_of += member.size_of;
-    alignment_of += member.alignment_of;
+    align_of += member.align_of;
   }, foo);
   expect(1+2 == sum);
   expect(sizeof(short)+sizeof(int) == size_of);
-  expect(alignof(short)+alignof(int) == alignment_of);
+  expect(alignof(short)+alignof(int) == align_of);
 }(), true));
 
 constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time

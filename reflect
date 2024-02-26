@@ -162,7 +162,7 @@ static_assert(([] {
 }(), true));
 
 namespace detail {
-template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&&, std::integral_constant<std::size_t, 0>) noexcept { return REFLECT_FWD(fn)(); }
+template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&&,   std::integral_constant<std::size_t, 0>) noexcept { return REFLECT_FWD(fn)(); }
 template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, std::integral_constant<std::size_t, 1>) noexcept { auto&& [_1] = REFLECT_FWD(t); return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, _1)); }
 template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, std::integral_constant<std::size_t, 2>) noexcept { auto&& [_1, _2] = REFLECT_FWD(t); return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, _1), REFLECT_FWD_LIKE(T, _2)); }
 template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, std::integral_constant<std::size_t, 3>) noexcept { auto&& [_1, _2, _3] = REFLECT_FWD(t); return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, _1), REFLECT_FWD_LIKE(T, _2), REFLECT_FWD_LIKE(T, _3)); }

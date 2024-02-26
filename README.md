@@ -306,6 +306,7 @@ constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at comp
 ```
 
 ```cpp
+strcut foo {  } f;
 debug(f); // compile-time error: debug(foo) is not defined
 ```
 

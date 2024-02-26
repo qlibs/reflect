@@ -92,7 +92,10 @@ static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}))
 
 ```cpp
 template<class T> requires std::is_aggregate_v<T>
-inline constexpr auto size = /*unspecified*/
+[[nodiscard]] constexpr auto size() -> std::size_t;
+
+template<class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size(const T&) -> std::size_t;
 ```
 
 ```cpp

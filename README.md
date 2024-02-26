@@ -306,7 +306,7 @@ constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at comp
 ```
 
 ```cpp
-debug(foo{}); // compile-time error: debug(foo) is not defined
+debug(f); // compile-time error: debug(foo) is not defined
 ```
 
 > Configuration

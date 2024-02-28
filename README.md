@@ -81,7 +81,7 @@ int main() {
 ### Examples
 
 - Opt-in mixins - https://godbolt.org/z/sqvn9bh1j
-- Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/7P7Kfe6Yr
+- Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
 
 ---
 
@@ -359,7 +359,7 @@ debug(f); // compile-time error: debug(foo) is not defined
 
 - How to extend number of members to be reflected (default: 64)?
 
-    > Override `visit`, for example - https://godbolt.org/z/7P7Kfe6Yr
+    > Override `visit`, for example - https://godbolt.org/z/Ga3bc3KKW
 
     ```cpp
     template <class Fn, class T> // requires https://wg21.link/P1061

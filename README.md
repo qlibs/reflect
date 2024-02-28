@@ -78,6 +78,12 @@ int main() {
 
 ---
 
+### Examples
+
+- Opt-in mixins - https://godbolt.org/z/sqvn9bh1j
+
+---
+
 ### API
 
 ```cpp

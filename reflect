@@ -320,7 +320,7 @@ template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn
 } // namespace detail
 
 template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
-[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
+[[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
   #if __cpp_structured_bindings >= 202401L
     auto&& [... ts] = REFLECT_FWD(t);
     return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, ts)...);

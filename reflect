@@ -149,16 +149,106 @@ template<class T> requires std::is_aggregate_v<T>
 
 static_assert(([] {
   struct empty {};
+  struct one { int a; };
+  struct two { int a; int b; };
+
   static_assert(0 == size<empty>());
   static_assert(0 == size(empty{}));
-
-  struct one { int a; };
   static_assert(1 == size<one>());
   static_assert(1 == size(one{}));
-
-  struct two { int a; int b; };
   static_assert(2 == size<two>());
   static_assert(2 == size(two{}));
+  static_assert(0 == size<const empty>());
+  static_assert(1 == size<const one>());
+  static_assert(2 == size<const two>());
+
+  struct non_standard_layout {
+   private:
+      int _1{};
+   public:
+      int _2{};
+  };
+
+  struct S {
+      double _1;
+      non_standard_layout _2;
+      float _3;
+  };
+
+  static_assert(3 == size<S>());
+
+  constexpr auto test = []<class T> {
+    struct S { T _1; T _2; int _3; T _4; };
+    struct S5_0 { int _1; int _2; int _3; int _4; T _5; };
+    struct S5_1 { T _1; int _2; int _3; int _4; int _5; };
+    struct S5_2 { int _1; int _2; T _3; int _4; int _5; };
+    struct S5_3 { int _1; int _2; T _3; int _4; T _5; };
+    struct S5_4 { T _1; T _2; T _3; T _4; T _5; };
+    struct S6 { T _1; T _2; T _3; T _4; T _5;  T _6;};
+
+    static_assert(4 == size<S>());
+    static_assert(5 == size<S5_0>());
+    static_assert(5 == size<S5_1>());
+    static_assert(5 == size<S5_2>());
+    static_assert(5 == size<S5_3>());
+    static_assert(5 == size<S5_4>());
+    static_assert(6 == size<S6>());
+  };
+
+  {
+    struct T {
+      T() = default;
+      T(T&&) = default;
+      T(const T&) = delete;
+      T& operator=(T&&) = default;
+      T& operator=(const T&) = delete;
+    };
+    test.template operator()<T>();
+  }
+
+  {
+    struct T {
+      T() = default;
+      T(T&&) = default;
+      T(const T&) = delete;
+      T& operator=(T&&) = default;
+      T& operator=(const T&) = delete;
+    };
+    test.template operator()<T>();
+  }
+
+  {
+    struct T {
+      T(T&&) = default;
+      T(const T&) = delete;
+      T& operator=(T&&) = default;
+      T& operator=(const T&) = delete;
+    };
+    test.template operator()<T>();
+  }
+
+  {
+    struct T { T(int) { } };
+    test.template operator()<T>();
+  }
+
+  struct bf {
+    unsigned int _1: 1;
+    unsigned int _2: 1;
+    unsigned int _3: 1;
+    unsigned int _4: 1;
+    unsigned int _5: 1;
+    unsigned int _6: 1;
+  };
+
+  static_assert(6 == size<bf>());
+
+  struct {
+    int _1;
+    int _2;
+  } anonymous;
+
+  static_assert(2 == size(anonymous));
 }(), true));
 
 namespace detail {
@@ -798,8 +888,7 @@ struct member {
   T value;
 };
 
-template<class Fn, class T>
-  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void {
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
     (REFLECT_FWD(fn)(member<decltype(reflect::get<Ns>(REFLECT_FWD(t)))>{

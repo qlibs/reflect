@@ -22,8 +22,13 @@
     !defined(__cpp_generic_lambdas) || \
     !defined(__cpp_nontype_template_args) || \
     !defined(__cpp_nontype_template_parameter_auto) || \
-    !defined(__cpp_structured_bindings)
-#error "[error][reflect] Required features are not supported by the compiler!"
+    !defined(__cpp_structured_bindings) || \
+    !__has_include(<array>) || \
+    !__has_include(<string_view>) || \
+    !__has_include(<source_location>) || \
+    !__has_include(<type_traits>) || \
+    !__has_include(<tuple>)
+#error "[error][reflect] Required features/libraries are not supported by the compiler!"
 #else
 #ifndef REFLECT
 #define REFLECT 1'0'6 // SemVer - should match reflect namespace

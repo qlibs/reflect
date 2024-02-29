@@ -428,15 +428,17 @@ static_assert(([] {
 template<std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept -> std::string_view {
-  std::array<std::string_view, Max-Min+1> enum_names{};
-  [&]<auto... Ns>(std::index_sequence<Ns...>) {
-      ([&]{
-        constexpr std::string_view name = detail::function_name<static_cast<E>(Ns+Min)>();
-        constexpr std::string_view tmp_name = name.substr(0, name.find(detail::enum_name_info::end));
-        constexpr std::string_view enum_name = tmp_name.substr(tmp_name.find_last_of(detail::enum_name_info::begin)+1);
-        enum_names[Ns] = enum_name.substr(enum_name.find_last_of("::")+1);
-      }(), ...);
-  }(std::make_index_sequence<std::size(enum_names)>{});
+  const auto enum_names_fn = [&]<auto... Ns>(std::index_sequence<Ns...>) {
+    return std::array{detail::function_name<static_cast<E>(Ns+Min)>()...};
+  }(std::make_index_sequence<Max-Min+1>{});
+
+  std::array<std::string_view, std::size(enum_names_fn)> enum_names{};
+  for (auto i = 0u; i < std::size(enum_names_fn); ++i) {
+      const auto fn_name = enum_names_fn[i];
+      const auto tmp_name = fn_name.substr(0, fn_name.find(detail::enum_name_info::end));
+      const auto enum_name = tmp_name.substr(tmp_name.find_last_of(detail::enum_name_info::begin)+1);
+      enum_names[i] = enum_name.substr(enum_name.find_last_of("::")+1);
+  }
   return enum_names[static_cast<decltype(Max-Min)>(e)-Min];
 }
 

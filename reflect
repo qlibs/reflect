@@ -408,27 +408,27 @@ static_assert(([] {
     };
 
     enum sparse {
-      _42 = 42,
-      _256 = 256,
+      _128 = 128,
+      _130 = 130,
     };
 
-    static_assert([](const auto e) { return requires { enum_name(e); }; }(foobar::foo));
-    static_assert([](const auto e) { return requires { enum_name(e); }; }(mask::a));
-    static_assert(not [](const auto e) { return requires { enum_name(e); }; }(0));
-    static_assert(not [](const auto e) { return requires { enum_name(e); }; }(42u));
-
-    static_assert(std::string_view{"foo"} == enum_name(foobar::foo));
-    static_assert(std::string_view{"bar"} == enum_name(foobar::bar));
-
-    static_assert(std::string_view{"a"} == enum_name(mask::a));
-    static_assert(std::string_view{"b"} == enum_name(mask::b));
-    static_assert(std::string_view{"c"} == enum_name(mask::c));
-
-    static_assert(std::string_view{"_42"} == enum_name<42, 256>(sparse::_42));
-    static_assert(std::string_view{"_256"} == enum_name<42, 256>(sparse::_256));
+    static_assert([](const auto e) { return requires { enum_name<1,2>(e); }; }(foobar::foo));
+    static_assert([](const auto e) { return requires { enum_name<1,2>(e); }; }(mask::a));
+    static_assert(not [](const auto e) { return requires { enum_name<1,2>(e); }; }(0));
+    static_assert(not [](const auto e) { return requires { enum_name<1,2>(e); }; }(42u));
 
     const auto e = foobar::foo;
-    static_assert(std::string_view{"foo"} == enum_name(e));
+    static_assert(std::string_view{"foo"} == enum_name<1,2>(e));
+
+    static_assert(std::string_view{"foo"} == enum_name<0,2>(foobar::foo));
+    static_assert(std::string_view{"bar"} == enum_name<0,2>(foobar::bar));
+
+    static_assert(std::string_view{"a"} == enum_name<0,2>(mask::a));
+    static_assert(std::string_view{"b"} == enum_name<0,2>(mask::b));
+    static_assert(std::string_view{"c"} == enum_name<0,2>(mask::c));
+
+    static_assert(std::string_view{"_128"} == enum_name<128,130>(sparse::_128));
+    static_assert(std::string_view{"_130"} == enum_name<128,130>(sparse::_130));
 }(), true));
 
 template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())

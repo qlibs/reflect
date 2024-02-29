@@ -324,7 +324,7 @@ debug(f); // compile-time error: debug(foo) is not defined
 > Configuration
 
 ```cpp
-#define REFLECT 1'0'6       // Current library version (SemVer)
+#define REFLECT 1'0'7       // Current library version (SemVer)
 #define REFLECT_ENUM_MIN 0  // Min size for enum name
 #define REFLECT_ENUM_MAX 64 // Max size for enum name
 ```
@@ -375,7 +375,7 @@ debug(f); // compile-time error: debug(foo) is not defined
     CPMAddPackage(
       Name reflect
       GITHUB_REPOSITORY boost-ext/reflect
-      GIT_TAG v1.0.6
+      GIT_TAG v1.0.7
     )
     add_library(reflect INTERFACE)
     target_include_directories(reflect SYSTEM INTERFACE ${reflect_SOURCE_DIR})

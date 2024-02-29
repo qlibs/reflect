@@ -8,7 +8,6 @@
 #ifndef REFLECT
 #define REFLECT 1'0'6 // SemVer - should match reflect namespace
 
-#include <algorithm>
 #include <array>
 #include <string_view>
 #include <source_location>
@@ -118,7 +117,7 @@ struct member_name_info {
 
 template<class T, std::size_t Size>
 struct fixed_string {
-  constexpr explicit(false) fixed_string(const T* str) { std::copy_n(str, Size, std::data(data)); }
+  constexpr explicit(false) fixed_string(const T* str) { for (decltype(Size) i{}; i < Size; ++i) { data[i] = str[i]; } }
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
   [[nodiscard]] constexpr explicit(false) operator std::string_view() const { return {std::data(data), Size}; }
   [[nodiscard]] constexpr auto size() const { return Size; }

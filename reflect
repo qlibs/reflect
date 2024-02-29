@@ -22,10 +22,7 @@
     !defined(__cpp_generic_lambdas) || \
     !defined(__cpp_nontype_template_args) || \
     !defined(__cpp_nontype_template_parameter_auto) || \
-    !defined(__cpp_structured_bindings) || \
-    !defined(__cpp_lib_source_location) || \
-    !defined(__cpp_lib_array_constexpr) || \
-    !defined(__cpp_lib_string_view)
+    !defined(__cpp_structured_bindings)
 #error "[error][reflect] Required features are not supported by the compiler!"
 #else
 #ifndef REFLECT

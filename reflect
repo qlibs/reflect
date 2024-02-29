@@ -5,6 +5,29 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
+#if !defined(__cpp_rvalue_references) || \
+    !defined(__cpp_decltype) || \
+    !defined(__cpp_decltype_auto) || \
+    !defined(__cpp_return_type_deduction) || \
+    !defined(__cpp_deduction_guides) || \
+    !defined(__cpp_generic_lambdas) || \
+    !defined(__cpp_constexpr) || \
+    !defined(__cpp_if_constexpr) || \
+    !defined(__cpp_alias_templates) || \
+    !defined(__cpp_variadic_templates) || \
+    !defined(__cpp_fold_expressions) || \
+    !defined(__cpp_static_assert) || \
+    !defined(__cpp_concepts) || \
+    !defined(__cpp_fold_expressions) || \
+    !defined(__cpp_generic_lambdas) || \
+    !defined(__cpp_nontype_template_args) || \
+    !defined(__cpp_nontype_template_parameter_auto) || \
+    !defined(__cpp_structured_bindings) || \
+    !defined(__cpp_lib_source_location) || \
+    !defined(__cpp_lib_array_constexpr) || \
+    !defined(__cpp_lib_string_view)
+#error "[error][reflect] Required features are not supported by the compiler!"
+#else
 #ifndef REFLECT
 #define REFLECT 1'0'6 // SemVer - should match reflect namespace
 
@@ -935,3 +958,4 @@ constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at comp
 #undef REFLECT_FWD_LIKE
 #undef REFLECT_FWD
 #endif  // REFLECT
+#endif

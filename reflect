@@ -214,9 +214,9 @@ static_assert(([] {
   };
 
   struct S {
-      double _1;
-      non_standard_layout _2;
-      float _3;
+    double _1;
+    non_standard_layout _2;
+    float _3;
   };
 
   static_assert(3 == size<S>());

@@ -963,7 +963,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
       int c;
     };
 
-#pragma pack(push, 1)
+    #pragma pack(push, 1)
     struct s2 {
       float a;
       char b;
@@ -972,7 +972,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
       double d;
       char e;
     };
-#pragma pack(pop)
+    #pragma pack(pop)
 
     struct a {
       int i;

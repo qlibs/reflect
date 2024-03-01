@@ -329,6 +329,9 @@ debug(f); // compile-time error: debug(foo) is not defined
 #define REFLECT_ENUM_MAX 64 // Max size for enum name
 ```
 
+```cpp
+#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests (not enabled by defualt, use with caution)
+```
 ---
 
 ### FAQ
@@ -356,6 +359,11 @@ debug(f); // compile-time error: debug(foo) is not defined
     > `reflect` include takes ~.2s (that includes running all tests).
     The most expensive calls are `visit` and `enum_to_name` which timing will depend on the number of reflected elements and/or min/max values provided.
     There are no recursive template instantiations in the library.
+
+- Can I disable running tests at compile-time for faster compilation times?
+
+    > When `REFLECT_DISABLE_STATIC_ASSERT_TESTS` is defined static_asserts tests won't be executed upon inclusion.
+    Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 
 - How to extend number of members to be reflected (default: 64)?
 

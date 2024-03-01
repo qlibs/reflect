@@ -123,8 +123,8 @@ struct type_name_info<T> {
 
 struct enum_name_info {
   static constexpr auto name = function_name<REFLECT_STRUCT::ENUM::VALUE>();
-  static constexpr auto begin = name[name.find("REFLECT_STRUCT::ENUM::VALUE")-1];
-  static constexpr auto end = name.substr(name.find("REFLECT_STRUCT::ENUM::VALUE")+std::size(std::string_view{"REFLECT_STRUCT::ENUM::VALUE"}));
+  static constexpr auto begin = name.find("REFLECT_STRUCT::ENUM::VALUE");
+  static constexpr auto end = std::size(name)-(name.find("REFLECT_STRUCT::ENUM::VALUE")+std::size(std::string_view{"REFLECT_STRUCT::ENUM::VALUE"}));
 };
 
 struct member_name_info {
@@ -253,18 +253,13 @@ template<class T>
 template<std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept -> std::string_view {
-  const auto enum_names_fn = [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    return std::array{detail::function_name<static_cast<E>(Ns+Min)>()...};
-  }(std::make_index_sequence<Max-Min+1>{});
-
-  std::array<std::string_view, std::size(enum_names_fn)> enum_names{};
-  for (auto i = 0u; i < std::size(enum_names_fn); ++i) {
-      const auto fn_name = enum_names_fn[i];
-      const auto tmp_name = fn_name.substr(0, fn_name.find(detail::enum_name_info::end));
-      const auto enum_name = tmp_name.substr(tmp_name.find_last_of(detail::enum_name_info::begin)+1);
-      enum_names[i] = enum_name.substr(enum_name.find_last_of("::")+1);
-  }
-  return enum_names[static_cast<decltype(Max-Min)>(e)-Min];
+  constexpr auto make = []<auto N> {
+    const auto fn_name = detail::function_name<static_cast<E>(N+Min)>();
+    const auto tmp_enum_name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+    return tmp_enum_name.substr(tmp_enum_name.find_last_of("::")+1);
+  };
+  return [&]<auto... Ns>(std::index_sequence<Ns...>) { return std::array{make.template operator()<Ns>()...}; }
+    (std::make_index_sequence<Max-Min+1>{})[static_cast<decltype(Max-Min)>(e)-Min];
 }
 
 template<class T>

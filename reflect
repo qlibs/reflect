@@ -267,6 +267,16 @@ template<std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX,
   return enum_names[static_cast<decltype(Max-Min)>(e)-Min];
 }
 
+template<class T>
+[[nodiscard]] constexpr auto type_id() {
+  std::size_t result{};
+  for (auto c : type_name<std::remove_cvref_t<std::remove_pointer_t<T>>>()) { (result ^= c) <<= 1; }
+  return result;
+}
+
+template<class T>
+[[nodiscard]] constexpr auto type_id(const T&) noexcept -> std::size_t { return type_id<T>(); }
+
 template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept -> std::string_view {
   constexpr std::string_view function_name = detail::function_name<visit([](auto&&... args) { return detail::ref{detail::nth_pack_element<N>(REFLECT_FWD(args)...)}; }, detail::ext<T>)>();
@@ -590,6 +600,22 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<>>());
     static_assert(std::string_view{"int"} == type_name(REFLECT_TEST::foo::type{}));
     static_assert(std::string_view{"E"} == type_name(REFLECT_TEST::foo::E{}));
+  }
+
+  // type_id
+  {
+    static_assert(type_id<REFLECT_TEST::bar>() != type_id(REFLECT_TEST::foo{}));
+    static_assert(type_id<int>() != type_id(REFLECT_TEST::foo{}));
+    static_assert(type_id<int>() != type_id<void>());
+    static_assert(type_id<void>() != type_id<int>());
+    static_assert(type_id<void>() == type_id<void>());
+    static_assert(type_id<int>() == type_id<int>());
+    static_assert(type_id<int>() == type_id<int&>());
+    static_assert(type_id<const int&>() == type_id<int&>());
+    static_assert(type_id<void*>() == type_id<void>());
+    static_assert(type_id<void*>() == type_id<void>());
+    static_assert(type_id<REFLECT_TEST::foo>() == type_id(REFLECT_TEST::foo{}));
+    static_assert(type_id<REFLECT_TEST::bar>() == type_id(REFLECT_TEST::bar{}));
   }
 
   // enum_name

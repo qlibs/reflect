@@ -112,14 +112,26 @@ static_assert(2 == size(f));
 ```
 
 ```cpp
-template <class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
-[[nodiscard]] constexpr auto type_name(const T& = {}) noexcept;
+template <class T> [[nodiscard]] constexpr auto type_name() noexcept;
+template <class T> [[nodiscard]] constexpr auto type_name(const T&) noexcept;
 ```
 
 ```cpp
 struct foo { int a; int b; };
 static_assert(std::string_view{"foo"} == type_name<foo>());
 static_assert(std::string_view{"foo"} == type_name(foo{}));
+```
+
+```cpp
+template <class T> [[nodiscard]] constexpr auto type_id() noexcept;
+template <class T> [[nodiscard]] constexpr auto type_id(const T&) noexcept;
+```
+
+```cpp
+struct foo { };
+struct bar { };
+static_assert(type_id(foo{}) == type_id(foo{}));
+static_assert(type_id(bar{}) != type_id<foo>());
 ```
 
 ```cpp

@@ -409,8 +409,7 @@ constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at comp
 #endif  // REFLECT
 #endif
 
-#ifndef REFLECT_DISABLE_STATIC_ASSERT_TESTS
-
+#if not defined(REFLECT_DISABLE_STATIC_ASSERT_TESTS)
 namespace REFLECT_TEST {
 struct empty { };
 struct foo { using type = int; enum E { }; };

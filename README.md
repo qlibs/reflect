@@ -330,7 +330,8 @@ debug(f); // compile-time error: debug(foo) is not defined
 ```
 
 ```cpp
-#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests (not enabled by defualt, use with caution)
+#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests 
+                                            // Not enabled by default (use with caution)
 ```
 ---
 

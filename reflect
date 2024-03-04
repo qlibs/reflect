@@ -255,10 +255,16 @@ template<class E>
   return static_cast<std::underlying_type_t<E>>(e);
 }
 
-template<auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
+template<class T> requires std::is_enum_v<T>
+struct enum_traits {
+  static constexpr auto min = REFLECT_ENUM_MIN;
+  static constexpr auto max = REFLECT_ENUM_MAX;
+};
+
+template<class E, auto Min = enum_traits<E>::min, auto Max = enum_traits<E>::max>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
-  constexpr auto make = []<auto N> {
+  constexpr auto fn_enum_name = []<auto N> {
     const auto fn_name = detail::function_name<static_cast<E>(N+Min)>();
     const auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
     return name.substr(name.find_last_of("::")+1);
@@ -266,11 +272,11 @@ template<auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
 
   if (std::is_constant_evaluated()) {
     return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-      return std::array{make.template operator()<Ns>()...}[to_underlying(e)-Min];
+      return std::array{fn_enum_name.template operator()<Ns>()...}[to_underlying(e)-Min];
     }(std::make_index_sequence<Max-Min+1>{});
   } else {
     return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-      static constexpr const auto jump_table = std::array{make.template operator()<Ns>()...};
+      static constexpr const auto jump_table = std::array{fn_enum_name.template operator()<Ns>()...};
       return jump_table[to_underlying(e)-Min];
     }(std::make_index_sequence<Max-Min+1>{});
   }
@@ -424,10 +430,17 @@ struct empty { };
 struct foo { using type = int; enum E { }; };
 struct bar { };
 template<class T> struct foo_t { };
-namespace ns::inline v1 {
-  template<auto...> struct bar_v { };
-} // ns
+namespace ns::inline v1 { template<auto...> struct bar_v { }; } // ns
+enum e {
+  _141 = 141,
+  _142 = 142,
+};
 } // REFLECT_TEST
+template<>
+struct reflect::enum_traits<REFLECT_TEST::e> {
+  static constexpr auto min = 141;
+  static constexpr auto max = 142;
+};
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
   using namespace reflect;
@@ -643,23 +656,27 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
         _130 = 130,
       };
 
-      static_assert([](const auto e) { return requires { enum_name<1,2>(e); }; }(foobar::foo));
-      static_assert([](const auto e) { return requires { enum_name<1,2>(e); }; }(mask::a));
-      static_assert(not [](const auto e) { return requires { enum_name<1,2>(e); }; }(0));
-      static_assert(not [](const auto e) { return requires { enum_name<1,2>(e); }; }(42u));
+      static_assert([](const auto e) { return requires { enum_name<foobar,1,2>(e); }; }(foobar::foo));
+      static_assert([](const auto e) { return requires { enum_name<mask,1,2>(e); }; }(mask::a));
+      static_assert(not [](const auto e) { return requires { enum_name<foobar,1,2>(e); }; }(0));
+      static_assert(not [](const auto e) { return requires { enum_name<int,1,2>(e); }; }(0));
+      static_assert(not [](const auto e) { return requires { enum_name<int,1,2>(e); }; }(42u));
 
       const auto e = foobar::foo;
-      static_assert(std::string_view{"foo"} == enum_name<1,2>(e));
+      static_assert(std::string_view{"foo"} == enum_name<foobar,1,2>(e));
 
-      static_assert(std::string_view{"foo"} == enum_name<0,2>(foobar::foo));
-      static_assert(std::string_view{"bar"} == enum_name<0,2>(foobar::bar));
+      static_assert(std::string_view{"foo"} == enum_name<foobar,0,2>(foobar::foo));
+      static_assert(std::string_view{"bar"} == enum_name<foobar,0,2>(foobar::bar));
 
-      static_assert(std::string_view{"a"} == enum_name<0,2>(mask::a));
-      static_assert(std::string_view{"b"} == enum_name<0,2>(mask::b));
-      static_assert(std::string_view{"c"} == enum_name<0,2>(mask::c));
+      static_assert(std::string_view{"a"} == enum_name<mask,0,2>(mask::a));
+      static_assert(std::string_view{"b"} == enum_name<mask,0,2>(mask::b));
+      static_assert(std::string_view{"c"} == enum_name<mask,0,2>(mask::c));
 
-      static_assert(std::string_view{"_128"} == enum_name<128,130>(sparse::_128));
-      static_assert(std::string_view{"_130"} == enum_name<128,130>(sparse::_130));
+      static_assert(std::string_view{"_128"} == enum_name<sparse,128,130>(sparse::_128));
+      static_assert(std::string_view{"_130"} == enum_name<sparse,128,130>(sparse::_130));
+
+      static_assert(std::string_view{"_141"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_141));
+      static_assert(std::string_view{"_142"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_142));
   }
 
   // member_name

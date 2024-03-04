@@ -135,13 +135,33 @@ static_assert(type_id(bar{}) != type_id<foo>());
 ```
 
 ```cpp
-template <std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
+template<class T> requires std::is_enum_v<T>
+struct enum_traits {
+  static constexpr auto min = REFLECT_ENUM_MIN;
+  static constexpr auto max = REFLECT_ENUM_MAX;
+};
+
+template<class E> 
+[[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
+
+template <class E, auto Min = enum_traits<E>::min, auto Max = enum_traits<E>::max>
   requires (std::is_enum_v<E> and Max > Min)
-[[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept;
+[[nodiscard]] constexpr auto enum_name(const E e) noexcept;
 ```
 
 ```cpp
 enum class Enum { foo = 1, bar = 2 };
+static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
+static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
+
+```cpp
+enum class Enum { foo = 1, bar = 1024 };
+
+template<>
+struct reflect::enum_traits<Enum> {
+  static constexpr auto min = 1;
+  static constexpr auto max = 1024;
+};
 static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
 static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
 ```

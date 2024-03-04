@@ -97,8 +97,8 @@ template<std::size_t N, class...Ts> requires (N < sizeof...(Ts))
   return nth_pack_element_impl<N>(REFLECT_FWD(args)...);
 }
 
-template<auto  V> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
-template<class T> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
+template<auto...  Vs> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
+template<class... Ts> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
 template<class>
 struct type_name_info {
@@ -250,16 +250,30 @@ template<class T>
 template<class T>
 [[nodiscard]] constexpr auto type_name(const T&) noexcept -> std::string_view { return type_name<T>(); }
 
-template<std::size_t Min = REFLECT_ENUM_MIN, std::size_t Max = REFLECT_ENUM_MAX, class E>
+template<class E>
+[[nodiscard]] constexpr auto to_underlying(const E e) noexcept {
+  return static_cast<std::underlying_type_t<E>>(e);
+}
+
+template<auto Min = REFLECT_ENUM_MIN, auto Max = REFLECT_ENUM_MAX, class E>
   requires (std::is_enum_v<E> and Max > Min)
-[[nodiscard]] constexpr auto enum_name(const E e = {}) noexcept -> std::string_view {
+[[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
   constexpr auto make = []<auto N> {
     const auto fn_name = detail::function_name<static_cast<E>(N+Min)>();
-    const auto tmp_enum_name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-    return tmp_enum_name.substr(tmp_enum_name.find_last_of("::")+1);
+    const auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+    return name.substr(name.find_last_of("::")+1);
   };
-  return [&]<auto... Ns>(std::index_sequence<Ns...>) { return std::array{make.template operator()<Ns>()...}; }
-    (std::make_index_sequence<Max-Min+1>{})[static_cast<decltype(Max-Min)>(e)-Min];
+
+  if (std::is_constant_evaluated()) {
+    return [&]<auto... Ns>(std::index_sequence<Ns...>) {
+      return std::array{make.template operator()<Ns>()...}[to_underlying(e)-Min];
+    }(std::make_index_sequence<Max-Min+1>{});
+  } else {
+    return [&]<auto... Ns>(std::index_sequence<Ns...>) {
+      static constexpr const auto jump_table = std::array{make.template operator()<Ns>()...};
+      return jump_table[to_underlying(e)-Min];
+    }(std::make_index_sequence<Max-Min+1>{});
+  }
 }
 
 template<class T>

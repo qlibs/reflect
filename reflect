@@ -244,7 +244,14 @@ template<class T>
   constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
   constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
   static_assert(std::size(type_name) > 0u);
-  return type_name;
+  if (std::is_constant_evaluated()) {
+    return type_name;
+  } else {
+    return [&] {
+      static constexpr const auto name = fixed_string<std::remove_cvref_t<decltype(type_name[0])>, std::size(type_name)>{std::data(type_name)};
+      return std::string_view{name};
+    }();
+  }
 }
 
 template<class T>
@@ -298,7 +305,14 @@ template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T
   constexpr std::string_view tmp_member_name = function_name.substr(0, function_name.find(detail::member_name_info::end));
   constexpr std::string_view member_name = tmp_member_name.substr(tmp_member_name.find_last_of(detail::member_name_info::begin)+1);
   static_assert(std::size(member_name) > 0u);
-  return member_name;
+  if (std::is_constant_evaluated()) {
+    return member_name;
+  } else {
+    return [&] {
+      static constexpr const auto name = fixed_string<std::remove_cvref_t<decltype(member_name[0])>, std::size(member_name)>{std::data(member_name)};
+      return std::string_view{name};
+    }();
+  }
 }
 
 template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>())

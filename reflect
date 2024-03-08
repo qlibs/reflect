@@ -6,52 +6,52 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 #if !defined(__cpp_rvalue_references)
-#error "[error][reflect-v1.0.9] __cpp_rvalue_references not supported!"
+#error "[error][reflect] __cpp_rvalue_references not supported!"
 #elif !defined(__cpp_decltype)
-#error "[error][reflect-v1.0.9] __cpp_decltype not supported!"
+#error "[error][reflect] __cpp_decltype not supported!"
 #elif !defined(__cpp_decltype_auto)
-#error "[error][reflect-v1.0.9] __cpp_decltype_auto not supported!"
+#error "[error][reflect] __cpp_decltype_auto not supported!"
 #elif !defined(__cpp_return_type_deduction)
-#error "[error][reflect-v1.0.9] __cpp_return_type_deduction not supported!"
+#error "[error][reflect] __cpp_return_type_deduction not supported!"
 #elif !defined(__cpp_deduction_guides)
-#error "[error][reflect-v1.0.9] __cpp_deduction_guides not supported!"
+#error "[error][reflect] __cpp_deduction_guides not supported!"
 #elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect-v1.0.9] __cpp_generic_lambdas not supported!"
+#error "[error][reflect] __cpp_generic_lambdas not supported!"
 #elif !defined(__cpp_constexpr)
-#error "[error][reflect-v1.0.9] __cpp_constexpr not supported!"
+#error "[error][reflect] __cpp_constexpr not supported!"
 #elif !defined(__cpp_if_constexpr)
-#error "[error][reflect-v1.0.9] __cpp_if_constexpr not supported!"
+#error "[error][reflect] __cpp_if_constexpr not supported!"
 #elif !defined(__cpp_alias_templates)
-#error "[error][reflect-v1.0.9] __cpp_alias_templates not supported!"
+#error "[error][reflect] __cpp_alias_templates not supported!"
 #elif !defined(__cpp_variadic_templates)
-#error "[error][reflect-v1.0.9] __cpp_variadic_templates not supported!"
+#error "[error][reflect] __cpp_variadic_templates not supported!"
 #elif !defined(__cpp_fold_expressions)
-#error "[error][reflect-v1.0.9] __cpp_fold_expressions not supported!"
+#error "[error][reflect] __cpp_fold_expressions not supported!"
 #elif !defined(__cpp_static_assert)
-#error "[error][reflect-v1.0.9] __cpp_static_assert not supported!"
+#error "[error][reflect] __cpp_static_assert not supported!"
 #elif !defined(__cpp_concepts)
-#error "[error][reflect-v1.0.9] __cpp_concepts not supported!"
+#error "[error][reflect] __cpp_concepts not supported!"
 #elif !defined(__cpp_fold_expressions)
-#error "[error][reflect-v1.0.9] __cpp_fold_expressions not supported!"
+#error "[error][reflect] __cpp_fold_expressions not supported!"
 #elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect-v1.0.9] __cpp_generic_lambdas not supported!"
+#error "[error][reflect] __cpp_generic_lambdas not supported!"
 #elif !defined(__cpp_nontype_template_args)
-#error "[error][reflect-v1.0.9] __cpp_nontype_template_args not supported!"
+#error "[error][reflect] __cpp_nontype_template_args not supported!"
 #elif !defined(__cpp_nontype_template_parameter_auto)
-#error "[error][reflect-v1.0.9] __cpp_nontype_template_parameter_auto not supported!"
+#error "[error][reflect] __cpp_nontype_template_parameter_auto not supported!"
 #elif !__has_include(<array>)
-#error "[error][reflect-v1.0.9] <array> not found!"
+#error "[error][reflect] <array> not found!"
 #elif !__has_include(<string_view>)
-#error "[error][reflect-v1.0.9] <string_view> not found!"
+#error "[error][reflect] <string_view> not found!"
 #elif !__has_include(<source_location>)
-#error "[error][reflect-v1.0.9] <source_location> not found!"
+#error "[error][reflect] <source_location> not found!"
 #elif !__has_include(<type_traits>)
-#error "[error][reflect-v1.0.9] <type_traits> not found!"
+#error "[error][reflect] <type_traits> not found!"
 #elif !__has_include(<tuple>)
-#error "[error][reflect-v1.0.9] <tuple> not found!"
+#error "[error][reflect] <tuple> not found!"
 #else
 #ifndef REFLECT
-#define REFLECT 1'0.9 // SemVer
+#define REFLECT 1'0'9 // SemVer
 
 #include <array>
 #include <string_view>

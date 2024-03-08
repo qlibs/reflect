@@ -348,9 +348,9 @@ debug(f); // compile-time error: debug(foo) is not defined
 > Configuration
 
 ```cpp
-#define REFLECT 1'0'9        // Current library version (SemVer)
-#define REFLECT_ENUM_MIN -1  // Min size for enum name
-#define REFLECT_ENUM_MAX 128 // Max size for enum name
+#define REFLECT 1'0'9         // Current library version (SemVer)
+#define REFLECT_ENUM_MIN -1   // Min size for enum name
+#define REFLECT_ENUM_MAX 1024 // Max size for enum name
 ```
 
 ```cpp

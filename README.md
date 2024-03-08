@@ -138,12 +138,15 @@ template<class E>
 [[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
 
 template<class E> requires std::is_enum_v<E>
-consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+consteval auto enum_min(const E = {}) { return REFLECT_ENUM_MIN; }
 
 template<class E> requires std::is_enum_v<E>
-consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
+consteval auto enum_max(const E = {}) { return REFLECT_ENUM_MAX; }
 
-template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
+template<class E,
+         fixed_string unknown = "",
+         auto Min = enum_min(E{}),
+         auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
 ```

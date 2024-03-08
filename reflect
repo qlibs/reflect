@@ -60,11 +60,11 @@
 #include <tuple>
 
 #if not defined(REFLECT_ENUM_MIN)
-#define REFLECT_ENUM_MIN 0
+#define REFLECT_ENUM_MIN -1
 #endif
 
 #if not defined(REFLECT_ENUM_MAX)
-#define REFLECT_ENUM_MAX 64
+#define REFLECT_ENUM_MAX 128
 #endif
 
 namespace {
@@ -262,31 +262,90 @@ template<class E>
   return static_cast<std::underlying_type_t<E>>(e);
 }
 
-template<class T> requires std::is_enum_v<T>
-struct enum_traits {
-  static constexpr auto min = REFLECT_ENUM_MIN;
-  static constexpr auto max = REFLECT_ENUM_MAX;
+namespace detail {
+template<class T, std::size_t Size>
+struct static_vector {
+  constexpr static_vector() = default;
+  constexpr auto push_back(const T& value) { values_[size_++] = value; }
+  [[nodiscard]] constexpr auto operator[](auto i) const { return values_[i]; }
+  [[nodiscard]] constexpr auto size() const { return size_; }
+  constexpr auto reset(const auto size) { size_ = size; }
+  std::array<T, Size> values_{};
+  std::size_t size_{};
 };
+} // namespace detail
 
-template<class E, auto Min = enum_traits<E>::min, auto Max = enum_traits<E>::max>
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
+
+template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
-  constexpr auto fn_enum_name = []<auto N> {
-    const auto fn_name = detail::function_name<static_cast<E>(N+Min)>();
-    const auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-    return name.substr(name.find_last_of("::")+1);
+#if defined(__clang__) and (__clang_major__ > 15)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
+#endif
+  constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
+    const auto names = detail::function_name<static_cast<E>(Ns+Min)...>();
+    const auto begin = detail::enum_name_info::begin;
+    const auto end = std::size(names)-detail::enum_name_info::end;
+    detail::static_vector<std::underlying_type_t<E>, sizeof...(Ns)> cases{};
+    std::underlying_type_t<E> index{};
+    auto valid = true;
+    for (auto i = begin; i < end; ++i) {
+      if (names[i] == ',') {
+        if (valid) { cases.push_back(index+Min); }
+        ++index;
+      } else if (names[i] == ' ') {
+        valid = true;
+      } else if (names[i] == '(' and names[i-1] == ' ') {
+        valid = false;
+      }
+    }
+    return cases;
+  }(std::make_index_sequence<Max-Min+2/*inclusive*/>{});
+
+  constexpr auto enum_name = []<auto N> {
+    if (std::is_constant_evaluated()) {
+      constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
+      constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+      constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
+      static_assert(std::size(enum_name) > 0u);
+      return enum_name;
+    } else {
+      return [] {
+        constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
+        constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+        constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
+        static_assert(std::size(enum_name) > 0u);
+        static constexpr const auto name2 = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
+        return std::string_view{name2};
+      }();
+    }
+  };
+#if defined(__clang__) and (__clang_major__ > 15)
+  #pragma clang diagnostic pop
+#endif
+
+  const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
+    switch (value) {
+      case enum_cases[I]: {
+        return enum_name.template operator()<enum_cases[I]>();
+      }
+      default: {
+        if constexpr (I < std::size(enum_cases)) {
+          return switch_case.template operator()<I+1>(switch_case, value);
+        } else {
+          return unknown;
+        }
+      }
+    }
   };
 
-  if (std::is_constant_evaluated()) {
-    return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-      return std::array{fn_enum_name.template operator()<Ns>()...}[to_underlying(e)-Min];
-    }(std::make_index_sequence<Max-Min+1>{});
-  } else {
-    return [&]<auto... Ns>(std::index_sequence<Ns...>) {
-      static constexpr const auto jump_table = std::array{fn_enum_name.template operator()<Ns>()...};
-      return jump_table[to_underlying(e)-Min];
-    }(std::make_index_sequence<Max-Min+1>{});
-  }
+  return switch_case(switch_case, to_underlying(e));
 }
 
 template<class T>
@@ -439,12 +498,9 @@ enum e {
   _141 = 141,
   _142 = 142,
 };
+consteval auto enum_min(e) { return e::_141; }
+consteval auto enum_max(e) { return e::_142; }
 } // REFLECT_TEST
-template<>
-struct reflect::enum_traits<REFLECT_TEST::e> {
-  static constexpr auto min = 141;
-  static constexpr auto max = 142;
-};
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
   using namespace reflect;
@@ -660,24 +716,27 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
         _130 = 130,
       };
 
-      static_assert([](const auto e) { return requires { enum_name<foobar,1,2>(e); }; }(foobar::foo));
-      static_assert([](const auto e) { return requires { enum_name<mask,1,2>(e); }; }(mask::a));
-      static_assert(not [](const auto e) { return requires { enum_name<foobar,1,2>(e); }; }(0));
-      static_assert(not [](const auto e) { return requires { enum_name<int,1,2>(e); }; }(0));
-      static_assert(not [](const auto e) { return requires { enum_name<int,1,2>(e); }; }(42u));
+      static_assert([](const auto e) { return requires { enum_name<foobar,"",1,2>(e); }; }(foobar::foo));
+      static_assert([](const auto e) { return requires { enum_name<mask,"",1,2>(e); }; }(mask::a));
+      static_assert(not [](const auto e) { return requires { enum_name<foobar,"",1,2>(e); }; }(0));
+      static_assert(not [](const auto e) { return requires { enum_name<int,"",1,2>(e); }; }(0));
+      static_assert(not [](const auto e) { return requires { enum_name<int,"",1,2>(e); }; }(42u));
+
+      static_assert(std::string_view{""} == enum_name<foobar,"",1,2>(static_cast<foobar>(42)));
+      static_assert(std::string_view{"unknown"} == enum_name<foobar,"unknown",1,2>(static_cast<foobar>(42)));
 
       const auto e = foobar::foo;
-      static_assert(std::string_view{"foo"} == enum_name<foobar,1,2>(e));
+      static_assert(std::string_view{"foo"} == enum_name<foobar,"",1,2>(e));
 
-      static_assert(std::string_view{"foo"} == enum_name<foobar,0,2>(foobar::foo));
-      static_assert(std::string_view{"bar"} == enum_name<foobar,0,2>(foobar::bar));
+      static_assert(std::string_view{"foo"} == enum_name<foobar,"",1,2>(foobar::foo));
+      static_assert(std::string_view{"bar"} == enum_name<foobar,"",1,2>(foobar::bar));
 
-      static_assert(std::string_view{"a"} == enum_name<mask,0,2>(mask::a));
-      static_assert(std::string_view{"b"} == enum_name<mask,0,2>(mask::b));
-      static_assert(std::string_view{"c"} == enum_name<mask,0,2>(mask::c));
+      static_assert(std::string_view{"a"} == enum_name<mask,"",0,2>(mask::a));
+      static_assert(std::string_view{"b"} == enum_name<mask,"",0,2>(mask::b));
+      static_assert(std::string_view{"c"} == enum_name<mask,"",0,2>(mask::c));
 
-      static_assert(std::string_view{"_128"} == enum_name<sparse,128,130>(sparse::_128));
-      static_assert(std::string_view{"_130"} == enum_name<sparse,128,130>(sparse::_130));
+      static_assert(std::string_view{"_128"} == enum_name<sparse,"",128,130>(sparse::_128));
+      static_assert(std::string_view{"_130"} == enum_name<sparse,"",128,130>(sparse::_130));
 
       static_assert(std::string_view{"_141"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_141));
       static_assert(std::string_view{"_142"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_142));

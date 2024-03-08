@@ -269,7 +269,6 @@ struct static_vector {
   constexpr auto push_back(const T& value) { values_[size_++] = value; }
   [[nodiscard]] constexpr auto operator[](auto i) const { return values_[i]; }
   [[nodiscard]] constexpr auto size() const { return size_; }
-  constexpr auto reset(const auto size) { size_ = size; }
   std::array<T, Size> values_{};
   std::size_t size_{};
 };

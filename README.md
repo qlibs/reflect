@@ -60,7 +60,6 @@ static_assert(42 == std::get<0>(t));
 static_assert(B  == std::get<1>(t));
 
 int main() {
-  // reflect::for_each
   reflect::for_each([](auto I) {
     std::print("{}.{}:{}={} ({}/{}/{})\n",
         reflect::type_name(f),                      // foo, foo
@@ -306,6 +305,10 @@ static_assert(4 == offset_of<1, foo>());
 ```
 
 ```cpp
+template<class Fn, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+constexpr auto for_each(Fn&& fn) -> void;
+
 template<class Fn, class T>
   requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void;

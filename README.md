@@ -134,18 +134,18 @@ static_assert(type_id(bar{}) != type_id<foo>());
 ```
 
 ```cpp
+template<class E>
+[[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
+
 template<class E> requires std::is_enum_v<E>
 consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
 
 template<class E> requires std::is_enum_v<E>
 consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
 
-template<class E>
-[[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
-
-template <class E, auto Min = enum_min(E{}), auto Max = enum_max(E{})>
+template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
-[[nodiscard]] constexpr auto enum_name(const E e) noexcept;
+[[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
 ```
 
 ```cpp
@@ -345,9 +345,9 @@ debug(f); // compile-time error: debug(foo) is not defined
 > Configuration
 
 ```cpp
-#define REFLECT 1'0'9       // Current library version (SemVer)
-#define REFLECT_ENUM_MIN 0  // Min size for enum name
-#define REFLECT_ENUM_MAX 64 // Max size for enum name
+#define REFLECT 1'0'9        // Current library version (SemVer)
+#define REFLECT_ENUM_MIN -1  // Min size for enum name
+#define REFLECT_ENUM_MAX 128 // Max size for enum name
 ```
 
 ```cpp

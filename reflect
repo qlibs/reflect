@@ -716,6 +716,13 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
         _130 = 130,
       };
 
+      enum class negative {
+        unknown = -1,
+        A = 0,
+        B = 1,
+      };
+
+
       static_assert([](const auto e) { return requires { enum_name<foobar,"",1,2>(e); }; }(foobar::foo));
       static_assert([](const auto e) { return requires { enum_name<mask,"",1,2>(e); }; }(mask::a));
       static_assert(not [](const auto e) { return requires { enum_name<foobar,"",1,2>(e); }; }(0));
@@ -737,6 +744,11 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
       static_assert(std::string_view{"_128"} == enum_name<sparse,"",128,130>(sparse::_128));
       static_assert(std::string_view{"_130"} == enum_name<sparse,"",128,130>(sparse::_130));
+
+      static_assert(std::string_view{"unknown"} == enum_name<negative,"<>",-1, 1>(negative::unknown));
+      static_assert(std::string_view{"A"} == enum_name<negative,"<>",-1, 1>(negative::A));
+      static_assert(std::string_view{"B"} == enum_name<negative,"<>",-1, 1>(negative::B));
+      static_assert(std::string_view{"<>"} == enum_name<negative,"<>",-1, 1>(static_cast<negative>(-42)));
 
       static_assert(std::string_view{"_141"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_141));
       static_assert(std::string_view{"_142"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_142));

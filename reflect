@@ -300,7 +300,7 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
         ++index;
       } else if (names[i] == ' ') {
         valid = true;
-      } else if (names[i] == '(' and names[i-1] == ' ') {
+      } else if (names[i] == '(' and (names[i-1] == ' ' or i == begin)) {
         valid = false;
       }
     }

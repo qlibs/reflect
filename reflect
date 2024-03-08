@@ -255,7 +255,7 @@ template<class T>
 }
 
 template<class T>
-[[nodiscard]] constexpr auto type_name(T&&) noexcept -> std::string_view { return type_name<T>(); }
+[[nodiscard]] constexpr auto type_name(T&&) noexcept -> std::string_view { return type_name<std::remove_cvref_t<T>>(); }
 
 template<class E>
 [[nodiscard]] constexpr auto to_underlying(const E e) noexcept {

@@ -351,7 +351,7 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
 template<class T>
 [[nodiscard]] constexpr auto type_id() {
   std::size_t result{};
-  for (auto c : type_name<std::remove_cvref_t<std::remove_pointer_t<T>>>()) { (result ^= c) <<= 1; }
+  for (const auto c : type_name<std::remove_cvref_t<std::remove_pointer_t<T>>>()) { (result ^= c) <<= 1; }
   return result;
 }
 

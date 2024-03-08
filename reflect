@@ -255,7 +255,7 @@ template<class T>
 }
 
 template<class T>
-[[nodiscard]] constexpr auto type_name(const T&) noexcept -> std::string_view { return type_name<T>(); }
+[[nodiscard]] constexpr auto type_name(T&&) noexcept -> std::string_view { return type_name<T>(); }
 
 template<class E>
 [[nodiscard]] constexpr auto to_underlying(const E e) noexcept {
@@ -297,7 +297,7 @@ template<class T>
 }
 
 template<class T>
-[[nodiscard]] constexpr auto type_id(const T&) noexcept -> std::size_t { return type_id<T>(); }
+[[nodiscard]] constexpr auto type_id(T&&) noexcept -> std::size_t { return type_id<std::remove_cvref_t<T>>(); }
 
 template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())
 [[nodiscard]] constexpr auto member_name(const T& = {}) noexcept -> std::string_view {
@@ -362,35 +362,34 @@ constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void {
   }(std::make_index_sequence<size<TDst>()>{});
 }
 
-template<class R, class T>
-  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template<class R, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto to(T&& t) noexcept {
   R r{};
   copy(REFLECT_FWD(t), r);
   return r;
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto size_of() -> std::size_t {
   return sizeof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>);
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto size_of(const T&) -> std::size_t {
-  return size_of<N, T>();
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto size_of(T&&) -> std::size_t {
+  return size_of<N, std::remove_cvref_t<T>>();
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto align_of() -> std::size_t {
   return alignof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>);
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto align_of(const T&) -> std::size_t {
-  return align_of<N, T>();
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto align_of(T&&) -> std::size_t {
+  return align_of<N, std::remove_cvref_t<T>>();
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto offset_of() -> std::size_t {
   if constexpr (not N) {
     return {};
@@ -402,31 +401,15 @@ template<std::size_t N, class T> requires std::is_aggregate_v<T>
   }
 }
 
-template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto offset_of(const T&) -> std::size_t {
-  return offset_of<N, T>();
+template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t {
+  return offset_of<N, std::remove_cvref_t<T>>();
 }
-
-template<class T>
-struct member {
-  std::size_t size_of;
-  std::size_t align_of;
-  std::size_t offset_of;
-  std::string_view name;
-  std::string_view type;
-  T value;
-};
 
 template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn, T&& t) -> void {
   [&]<auto... Ns>(std::index_sequence<Ns...>) {
-    (REFLECT_FWD(fn)(member<decltype(reflect::get<Ns>(REFLECT_FWD(t)))>{
-                     size_of<Ns>(REFLECT_FWD(t)),
-                     align_of<Ns>(REFLECT_FWD(t)),
-                     offset_of<Ns>(REFLECT_FWD(t)),
-                     member_name<Ns>(REFLECT_FWD(t)),
-                     type_name(reflect::get<Ns>(REFLECT_FWD(t))),
-                     reflect::get<Ns>(REFLECT_FWD(t))}), ...);
+    (REFLECT_FWD(fn)(std::integral_constant<decltype(Ns), Ns>{}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
 
@@ -1061,13 +1044,13 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     std::array<std::common_type_t<short, int>, size(f)> value{};
 
     auto i = 0;
-    for_each([&](const auto& member) {
-      size_of[i] = member.size_of;
-      align_of[i] = member.align_of;
-      offset_of[i] = member.offset_of;
-      name[i] = member.name;
-      type[i] = member.type;
-      value[i] = member.value;
+    for_each([&](auto I) {
+      size_of[i] = reflect::size_of<I>(f);
+      align_of[i] = reflect::align_of<I>(f);
+      offset_of[i] = reflect::offset_of<I>(f);
+      name[i] = reflect::member_name<I>(f);
+      type[i] = reflect::type_name(reflect::get<I>(f));
+      value[i] = reflect::get<I>(f);
       ++i;
     }, f);
 

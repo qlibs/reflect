@@ -61,15 +61,15 @@ static_assert(B  == std::get<1>(t));
 
 int main() {
   // reflect::for_each
-  reflect::for_each([](const auto& member) {
+  reflect::for_each([](auto I) {
     std::print("{}.{}:{}={} ({}/{}/{})\n",
-        reflect::type_name(f),
-        member.name,
-        member.type,            //
-        member.value,           // foo.a:int=42 (4/4/0)
-        member.size_of,         // foo.b:E=B (4/4/4)
-        member.align_of,        //
-        member.offset_of);
+        reflect::type_name(f),                      // foo, foo
+        reflect::member_name<I>(f),                 // a  , b
+        reflect::type_name<I>(reflect::get<I>(f)),  // int, E
+        reflect::get<I>(f),                         // 42 , B
+        reflect::size_of<I>(f),                     // 4  , 4
+        reflect::align_of<I>(f),                    // 4  , 4
+        reflect::offset_of<I>(f);                   // 0  , 4
   }, f);
 }
 
@@ -124,7 +124,7 @@ static_assert(std::string_view{"foo"} == type_name(foo{}));
 
 ```cpp
 template <class T> [[nodiscard]] constexpr auto type_id() noexcept;
-template <class T> [[nodiscard]] constexpr auto type_id(const T&) noexcept;
+template <class T> [[nodiscard]] constexpr auto type_id(T&&) noexcept;
 ```
 
 ```cpp
@@ -141,7 +141,7 @@ struct enum_traits {
   static constexpr auto max = REFLECT_ENUM_MAX;
 };
 
-template<class E> 
+template<class E>
 [[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
 
 template <class E, auto Min = enum_traits<E>::min, auto Max = enum_traits<E>::max>
@@ -279,19 +279,19 @@ template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size_of() -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto size_of(const T&) -> std::size_t;
+[[nodiscard]] constexpr auto size_of(T&&) -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto align_of() -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto align_of(const T&) -> std::size_t;
+[[nodiscard]] constexpr auto align_of(T&&) -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto offset_of() -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
-[[nodiscard]] constexpr auto offset_of(const T&) -> std::size_t;
+[[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t;
 ```
 
 ```cpp
@@ -303,18 +303,6 @@ static_assert(4 == align_of<0, foo>());
 static_assert(1 == align_of<1, foo>());
 static_assert(0 == offset_of<0, foo>());
 static_assert(4 == offset_of<1, foo>());
-```
-
-```cpp
-template<class T>
-struct member {
-  std::size_t size_of;
-  std::size_t align_of;
-  std::size_t offset_of;
-  std::string_view name;
-  std::string_view type;
-  T value;
-};
 ```
 
 ```cpp
@@ -362,7 +350,7 @@ debug(f); // compile-time error: debug(foo) is not defined
 ```
 
 ```cpp
-#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests 
+#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests
                                             // Not enabled by default (use with caution)
 ```
 ---

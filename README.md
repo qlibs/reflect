@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/dd6cfW98c">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/GGEscxxEn">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/erb3KGb75">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -22,7 +22,7 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/GGEscxxEn)
+### Hello world (https://godbolt.org/z/erb3KGb75)
 
 ```cpp
 #include <reflect>
@@ -62,13 +62,13 @@ static_assert(B  == std::get<1>(t));
 int main() {
   reflect::for_each([](auto I) {
     std::print("{}.{}:{}={} ({}/{}/{})\n",
-        reflect::type_name(f),                      // foo, foo
-        reflect::member_name<I>(f),                 // a  , b
-        reflect::type_name<I>(reflect::get<I>(f)),  // int, E
-        reflect::get<I>(f),                         // 42 , B
-        reflect::size_of<I>(f),                     // 4  , 4
-        reflect::align_of<I>(f),                    // 4  , 4
-        reflect::offset_of<I>(f);                   // 0  , 4
+        reflect::type_name(f),                  // foo, foo
+        reflect::member_name<I>(f),             // a  , b
+        reflect::type_name(reflect::get<I>(f)), // int, E
+        reflect::get<I>(f),                     // 42 , B
+        reflect::size_of<I>(f),                 // 4  , 4
+        reflect::align_of<I>(f),                // 4  , 4
+        reflect::offset_of<I>(f));              // 0  , 4
   }, f);
 }
 

@@ -463,8 +463,8 @@ reflect::for_each([&f](const auto I) {
 
 ```cpp
 #define REFLECT 1'1'0         // Current library version (SemVer)
-#define REFLECT_ENUM_MIN -1   // Min size for enum name
-#define REFLECT_ENUM_MAX 1024 // Max size for enum name
+#define REFLECT_ENUM_MIN -1   // Min size for enum name (can be overridden by -DREFLECT_ENUM_MIN=0)
+#define REFLECT_ENUM_MAX 1024 // Max size for enum name (can be overridden by -DREFLECT_ENUM_MAX=32)
 ```
 
 ```cpp

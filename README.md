@@ -13,9 +13,10 @@
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
 - Minimal [API](#api)
-- Verifies itself upon include (aka run all tests via static_asserts)
+- Verifies itself upon include (aka run all tests via static_asserts) / can be disabled (see [FAQ](#faq))
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations)
-- Optimized run-time and binary-size
+- Optimized run-time execution and binary-size (see [perf](#perf))
+- Fast compilation compilation-times (see [compilation-times](#comp))
 
 ### Requirements
 
@@ -88,6 +89,7 @@ int main() {
 
 ---
 
+<a name="perf"></a>
 ### Performance/Binary size (https://godbolt.org/z/vecvznYrP)
 
 ```cpp
@@ -197,6 +199,7 @@ enum_name<E>::operator()<879>
         .ascii  "big"
 ```
 
+<a name="comp"></a>
 ### Compilation times
 
 > [include] https://raw.githubusercontent.com/boost-ext/reflect/main/reflect

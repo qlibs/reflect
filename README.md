@@ -15,7 +15,7 @@
 - Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts) / can be disabled (see [FAQ](#faq))
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations (see [FAQ](#faq)))
-- Optimized run-time execution and binary-size (see [perf](#perf))
+- Optimized run-time execution and binary-size (see [performance](#perf))
 - Fast compilation compilation-times (see [compilation-times](#comp))
 
 ### Requirements

@@ -15,6 +15,7 @@
 - Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts)
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations)
+- Optimized run-time and binary-size
 
 ### Requirements
 

@@ -272,15 +272,7 @@ struct static_vector {
   std::array<T, Size> values_{};
   std::size_t size_{};
 };
-} // namespace detail
 
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
-
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
-
-namespace detail {
 #if defined(__clang__) and (__clang_major__ > 15)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
@@ -309,18 +301,14 @@ constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
 
 template<class E, auto N> requires std::is_enum_v<E>
 [[nodiscard]] constexpr auto enum_name () {
+  constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
+  constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+  constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
+  static_assert(std::size(enum_name) > 0u);
   if (std::is_constant_evaluated()) {
-    constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
-    constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-    constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
-    static_assert(std::size(enum_name) > 0u);
     return enum_name;
   } else {
-    return [] {
-      constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
-      constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-      constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
-      static_assert(std::size(enum_name) > 0u);
+    return [&] {
       static constexpr const auto static_name = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
       return std::string_view{static_name};
     }();
@@ -329,7 +317,13 @@ template<class E, auto N> requires std::is_enum_v<E>
 #if defined(__clang__) and (__clang_major__ > 15)
   #pragma clang diagnostic pop
 #endif
-} // namespace detail 
+} // namespace detail
+
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
 
 template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)

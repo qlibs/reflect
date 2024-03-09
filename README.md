@@ -1,6 +1,6 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
-<a href="https://godbolt.org/z/dd6cfW98c">![build](https://img.shields.io/badge/build-blue.svg)</a>
+<a href="https://godbolt.org/z/M747ocGfx">![build](https://img.shields.io/badge/build-blue.svg)</a>
 <a href="https://godbolt.org/z/EW1evKeW4">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
@@ -14,6 +14,8 @@
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
 - Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts but it can be disabled - see [FAQ](#faq))
+    - basically guarantees no UB, no memory leaks
+- Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors`](https://godbolt.org/z/M747ocGfx))
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
 - Optimized run-time execution and binary-size (see [performance](#perf))
 - Fast compilation-times (see [compilation-times](#comp))

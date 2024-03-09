@@ -193,6 +193,20 @@ enum_name<E>::operator()<879>
         .ascii  "big"
 ```
 
+### Compilation times
+
+> [include] https://raw.githubusercontent.com/boost-ext/reflect/main/reflect
+
+```cpp
+time g++ -x c++ -std=c++20 reflect -c DREFLECT_DISABLE_STATIC_ASSERT_TESTS     # 0.113s
+time g++ -x c++ -std=c++20 reflect -c                                          # 0.253s
+```
+
+```cpp
+time clang++ -x c++ -std=c++20 reflect -c DREFLECT_DISABLE_STATIC_ASSERT_TESTS # 0.119s
+time clang++ -x c++ -std=c++20 reflect -c                                      # 0.322s
+```
+
 ---
 
 ### API

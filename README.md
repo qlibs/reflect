@@ -79,7 +79,7 @@ int main() {
 
 ### Examples
 
-- Opt-in mixins - https://godbolt.org/z/sqvn9bh1j
+- Opt-in mixins - https://godbolt.org/z/sj7fYKoc3
 - Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
 
 ---

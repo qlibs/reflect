@@ -13,8 +13,8 @@
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
 - Minimal [API](#api)
-- Verifies itself upon include (aka run all tests via static_asserts) / can be disabled (see [FAQ](#faq))
-- Compiler changes agnostic (no ifdefs for the compiler specific implementations (see [FAQ](#faq)))
+- Verifies itself upon include (aka run all tests via static_asserts but it can be disabled - see [FAQ](#faq))
+- Compiler changes agnostic (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
 - Optimized run-time execution and binary-size (see [performance](#perf))
 - Fast compilation-times (see [compilation-times](#comp))
 

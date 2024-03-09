@@ -14,8 +14,8 @@
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
 - Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts but it can be disabled - see [FAQ](#faq))
-    - basically guarantees no UB, no memory leaks
-- Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors`](https://godbolt.org/z/M747ocGfx))
+    - Basically guarantees no UB, no memory leaks*
+- Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors | /W4 /WX`](https://godbolt.org/z/M747ocGfx))
 - Compiler changes agnostic (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
 - Optimized run-time execution and binary-size (see [performance](#perf))
 - Fast compilation-times (see [compilation-times](#comp))

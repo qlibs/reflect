@@ -452,24 +452,11 @@ constexpr auto for_each(Fn&& fn, T&& t) -> void;
 ```
 
 ```cpp
-struct foo { int a; int b; };
+struct { int a; int b; } f;
 
-reflect::for_each([](const auto& member) {
-  std::print("{}:{}={}", member.name, member.type, member.value); // prints a:int=4, b:int=2
-}, foo{.a=4, .b=2});
-```
-
-```cpp
-template <class T, std::size_t Size> struct fixed_string;
-```
-
-```cpp
-static_assert(0u == std::size(fixed_string{""}));
-static_assert(fixed_string{""} == fixed_string{""});
-static_assert(std::string_view{""} == std::string_view{fixed_string{""}});
-static_assert(3u == std::size(fixed_string{"foo"}));
-static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
-static_assert(fixed_string{"foo"} == fixed_string{"foo"});
+reflect::for_each([&f](const auto I) {
+  std::print("{}:{}={}", member_name<I>(f), get<I>(f)); // prints a:int=4, b:int=2
+}, f);
 ```
 
 > Configuration

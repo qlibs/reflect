@@ -122,7 +122,7 @@ auto enum_name(const E e) { return reflect::enum_name(e); }
 ```
 
 ```asm
-enum_name(E): // $CXX -O3 - generates switch_case
+enum_name(E): // $CXX -O3 (generates switch)
         lea     ecx, [rdi + 1]
         cmp     ecx, 6
         ja      .LBB2_6

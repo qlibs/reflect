@@ -12,6 +12,7 @@
 ### Features
 
 - Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
+    - Easy integration (see [FAQ](#faq))
 - Minimal [API](#api)
 - Verifies itself upon include (aka run all tests via static_asserts but it can be disabled - see [FAQ](#faq))
     - Basically guarantees no UB, no memory leaks*

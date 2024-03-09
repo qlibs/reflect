@@ -89,32 +89,40 @@ int main() {
 ```cpp
 struct foo { int bar; };
 auto type_name(const foo& f) { return reflect::type_name(f); }
-auto member_name(const foo& f) { return reflect::member_name<0>(f); }
-
-enum class E { negative = -1, big = 879, _3 = 3, _4 = 4, _5 = 5, _6 = 6, _7 = 7, };
-auto enum_name(const E e) { return reflect::enum_name(e); }
 ```
 
 ```asm
-// $CXX -O3
-
-type_name(foo const&):
+type_name(foo const&): // $CXX -O3
         lea     rdx, [rip + type_name<foo>]
         mov     eax, 3
         ret
 
 type_name<foo>
         .ascii  "foo"
+```
 
-member_name(foo const&):
+```cpp
+struct foo { int bar; };
+auto member_name(const foo& f) { return reflect::member_name<0>(f); }
+```
+
+```asm
+member_name(foo const&): // $CXX -O3
         lea     rdx, [rip + member_name<0ul, foo>]
         mov     eax, 3
         ret
 
 member_name<0ul, foo>
         .ascii  "bar"
+```
 
-enum_name(E): // generates switch_case
+```cpp
+enum class E { negative = -1, big = 879, _3 = 3, _4 = 4, _5 = 5, _6 = 6, _7 = 7, };
+auto enum_name(const E e) { return reflect::enum_name(e); }
+```
+
+```asm
+enum_name(E): // $CXX -O3 - generates switch_case
         lea     ecx, [rdi + 1]
         cmp     ecx, 6
         ja      .LBB2_6

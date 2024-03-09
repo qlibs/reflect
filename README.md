@@ -463,10 +463,10 @@ reflect::for_each([&f](const auto I) {
 
 ```cpp
 #define REFLECT 1'1'0                       // Current library version (SemVer)
-#define REFLECT_ENUM_MIN -1                 // Min size for enum name
-                                            // Can be overridden, for example: `-DREFLECT_ENUM_MIN=0`
-#define REFLECT_ENUM_MAX 1024               // Max size for enum name
-                                            // Can be overridden, for example: `-DREFLECT_ENUM_MAX=32`
+#define REFLECT_ENUM_MIN -1                 // Min size for enum name (can be overridden)
+                                            // For example: `-DREFLECT_ENUM_MIN=0`
+#define REFLECT_ENUM_MAX 1024               // Max size for enum name (can be overridden)
+                                            // For example: `-DREFLECT_ENUM_MAX=32`
 #define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests
                                             // Not enabled by default (use with caution)
 ```

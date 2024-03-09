@@ -174,10 +174,10 @@ enum_name(E): // $CXX -O3 (generates switch)
 enum_name<E>::operator()<-1>
         .ascii  "negative"
 
-enum_name<E>operator()<3>
+enum_name<E>::operator()<3>
         .ascii  "_3"
 
-enum_name<E>operator()<4>
+enum_name<E>::operator()<4>
         .ascii  "_4"
 
 enum_name<E>::operator()<5>

@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/dd6cfW98c">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/3KrYqh8E1">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/K9688f4Kn">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -23,7 +23,7 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/3KrYqh8E1)
+### Hello world (https://godbolt.org/z/K9688f4Kn)
 
 ```cpp
 #include <reflect>
@@ -35,6 +35,9 @@ constexpr auto f = foo{.a = 42, .b = B};
 
 // reflect::size
 static_assert(2 == reflect::size(f));
+
+// reflect::type_id
+static_assert(reflect::type_id(f.a) != reflect::type_id(f.b));
 
 // reflect::type_name
 static_assert("foo"sv == reflect::type_name(f));

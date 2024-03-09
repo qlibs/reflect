@@ -479,8 +479,6 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
     (REFLECT_FWD(fn)(std::integral_constant<decltype(Ns), Ns>{}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
-
-constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
 } // namespace reflect
 
 #undef REFLECT_FWD_LIKE

@@ -472,15 +472,6 @@ static_assert(std::string_view{"foo"} == std::string_view{fixed_string{"foo"}});
 static_assert(fixed_string{"foo"} == fixed_string{"foo"});
 ```
 
-```cpp
-constexpr auto debug(auto&&...) -> void; // [debug facility] shows types at compile time
-```
-
-```cpp
-struct foo {  } f;
-debug(f); // compile-time error: debug(foo) is not defined
-```
-
 > Configuration
 
 ```cpp

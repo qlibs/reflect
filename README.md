@@ -93,7 +93,7 @@ int main() {
 ---
 
 <a name="perf"></a>
-### Performance/Binary size (https://godbolt.org/z/vecvznYrP)
+### Performance/Binary size (https://godbolt.org/z/7TbobjWfj)
 
 ```cpp
 struct foo { int bar; };
@@ -101,7 +101,7 @@ auto type_name(const foo& f) { return reflect::type_name(f); }
 ```
 
 ```asm
-type_name(foo const&): // $CXX -O3
+type_name(foo const&): // $CXX -O3 -DNDEBUG
         lea     rdx, [rip + type_name<foo>]
         mov     eax, 3
         ret
@@ -116,7 +116,7 @@ auto member_name(const foo& f) { return reflect::member_name<0>(f); }
 ```
 
 ```asm
-member_name(foo const&): // $CXX -O3
+member_name(foo const&): // $CXX -O3 -DNDEBUG
         lea     rdx, [rip + member_name<0ul, foo>]
         mov     eax, 3
         ret
@@ -131,7 +131,7 @@ auto enum_name(const E e) { return reflect::enum_name(e); }
 ```
 
 ```asm
-enum_name(E): // $CXX -O3 (generates switch)
+enum_name(E): // $CXX -O3 -DNDEBUG (generates switch)
         lea     ecx, [rdi + 1]
         cmp     ecx, 6
         ja      .LBB2_6

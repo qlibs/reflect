@@ -47,6 +47,8 @@
 #error "[error][reflect] <source_location> not found!"
 #elif !__has_include(<type_traits>)
 #error "[error][reflect] <type_traits> not found!"
+#elif !__has_include(<utility>)
+#error "[error][reflect] <utility> not found!"
 #elif !__has_include(<tuple>)
 #error "[error][reflect] <tuple> not found!"
 #else
@@ -58,6 +60,7 @@
 #include <source_location>
 #include <type_traits>
 #include <tuple>
+#include <utility>
 
 #if not defined(REFLECT_ENUM_MIN)
 #define REFLECT_ENUM_MIN -1

@@ -295,17 +295,18 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
     std::underlying_type_t<E> index{};
     auto valid = true;
     for (auto i = begin; i < end; ++i) {
-      if (names[i] == ',') {
+      if (names[i] == '(' and names[i+1] != ')') {
+        valid = false;
+      } else if (names[i] == ' ' or names[i] == ':') {
+        valid = true;
+      } else if (names[i] == ',' or i == end-1) {
         if (valid) { cases.push_back(index+Min); }
         ++index;
-      } else if (names[i] == ' ') {
         valid = true;
-      } else if (names[i] == '(' and (names[i-1] == ' ' or i == begin)) {
-        valid = false;
       }
     }
     return cases;
-  }(std::make_index_sequence<Max-Min+2/*inclusive*/>{});
+  }(std::make_index_sequence<Max-Min+1/*inclusive*/>{});
 
   constexpr auto enum_name = []<auto N> {
     if (std::is_constant_evaluated()) {
@@ -329,22 +330,25 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
   #pragma clang diagnostic pop
 #endif
 
-  const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
-    switch (value) {
-      case enum_cases[I]: {
-        return enum_name.template operator()<enum_cases[I]>();
-      }
-      default: {
-        if constexpr (I < std::size(enum_cases)) {
-          return switch_case.template operator()<I+1>(switch_case, value);
-        } else {
-          return unknown;
+  if constexpr (std::size(enum_cases) > 0) {
+    const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
+      switch (value) {
+        case enum_cases[I]: {
+          return enum_name.template operator()<enum_cases[I]>();
+        }
+        default: {
+          if constexpr (I < std::size(enum_cases)-1) {
+            return switch_case.template operator()<I+1>(switch_case, value);
+          } else {
+            return unknown;
+          }
         }
       }
-    }
-  };
-
-  return switch_case(switch_case, to_underlying(e));
+    };
+    return switch_case(switch_case, to_underlying(e));
+  } else {
+    return unknown;
+  }
 }
 
 template<class T>

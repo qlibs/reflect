@@ -84,6 +84,104 @@ int main() {
 
 ---
 
+### Performance/Binary size
+
+```cpp
+struct foo { int bar; };
+auto type_name(const foo& f) { return reflect::type_name(f); }
+auto member_name(const foo& f) { return reflect::member_name<0>(f); }
+
+enum class E { negative = -1, big = 879, _3 = 3, _4 = 4, _5 = 5, _6 = 6, _7 = 7, };
+auto enum_name(const E e) { return reflect::enum_name(e); }
+```
+
+```asm
+type_name(foo const&):
+        lea     rdx, [rip + std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::type_name<foo>()::'lambda'()::operator()() const::name]
+        mov     eax, 3
+        ret
+member_name(foo const&):                  # @member_name(foo const&)
+        lea     rdx, [rip + std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::member_name<0ul, foo>(T0 const&)::'lambda'()::operator()() const::name]
+        mov     eax, 3
+        ret
+enum_name(E):                         # @enum_name(E)
+        lea     ecx, [rdi + 1]
+        cmp     ecx, 6
+        ja      .LBB2_6
+        mov     eax, 2
+        lea     rdx, [rip + .LJTI2_0]
+        movsxd  rcx, dword ptr [rdx + 4*rcx]
+        add     rcx, rdx
+        jmp     rcx
+.LBB2_3:
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<-1>() const::'lambda'()::operator()() const::static_name]
+        mov     eax, 8
+        ret
+.LBB2_5:
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<4>() const::'lambda'()::operator()() const::static_name]
+        ret
+.LBB2_4:
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<3>() const::'lambda'()::operator()() const::static_name]
+        ret
+.LBB2_2:
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<5>() const::'lambda'()::operator()() const::static_name]
+        ret
+.LBB2_6:
+        xor     ecx, ecx
+        xor     eax, eax
+        cmp     edi, 879
+        sete    al
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<879>() const::'lambda'()::operator()() const::static_name]
+        cmove   rcx, rdx
+        cmp     edi, 7
+        lea     rax, [rax + 2*rax]
+        mov     esi, 2
+        cmove   rax, rsi
+        lea     r8, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<7>() const::'lambda'()::operator()() const::static_name]
+        cmovne  r8, rcx
+        cmp     edi, 6
+        lea     rdx, [rip + auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<6>() const::'lambda'()::operator()() const::static_name]
+        cmovne  rdx, r8
+        cmove   rax, rsi
+        ret
+.LJTI2_0:
+        .long   .LBB2_3-.LJTI2_0
+        .long   .LBB2_6-.LJTI2_0
+        .long   .LBB2_6-.LJTI2_0
+        .long   .LBB2_6-.LJTI2_0
+        .long   .LBB2_4-.LJTI2_0
+        .long   .LBB2_5-.LJTI2_0
+        .long   .LBB2_2-.LJTI2_0
+std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::type_name<foo>()::'lambda'()::operator()() const::name:
+        .ascii  "foo"
+
+std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::member_name<0ul, foo>(T0 const&)::'lambda'()::operator()() const::name:
+        .ascii  "bar"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<-1>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "negative"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<3>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "_3"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<4>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "_4"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<5>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "_5"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<6>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "_6"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<7>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "_7"
+
+auto std::basic_string_view<char, std::char_traits<char>> reflect::v1_0_9::enum_name<E, reflect::v1_0_9::fixed_string<char, 0ul>{}, -1, 1024>(T)::'lambda'<auto $N2>()::operator()<879>() const::'lambda'()::operator()() const::static_name:
+        .ascii  "big"
+```
+
+---
+
 ### API
 
 ```cpp

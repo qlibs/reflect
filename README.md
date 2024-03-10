@@ -90,6 +90,7 @@ int main() {
 
 - Opt-in mixins - https://godbolt.org/z/sj7fYKoc3
 - Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
+- Faster `enum_name` with Minimal-Perfect-Hashing (https://github.com/boost-ext/mph) - https://godbolt.org/z/b3rE5MKe3
 
 ---
 

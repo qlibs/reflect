@@ -147,6 +147,7 @@ struct fixed_string {
 };
 template<class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
 
+namespace detail {
 template<class T, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
@@ -155,10 +156,16 @@ template<class T, class... Ts> requires std::is_aggregate_v<T>
     return size<T, Ts..., detail::any>();
   }
 }
+} // namespace detail
+
+template<class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto size() -> std::size_t {
+  return detail::size<std::remove_cvref_t<T>>();
+}
 
 template<class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size(const T&) -> std::size_t {
-  return size<std::remove_cvref_t<T>>();
+  return detail::size<T>();
 }
 
 namespace detail {

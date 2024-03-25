@@ -158,7 +158,7 @@ template<class T, class... Ts> requires std::is_aggregate_v<T>
 
 template<class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size(const T&) -> std::size_t {
-  return size<T>();
+  return size<std::remove_cvref_t<T>>();
 }
 
 namespace detail {

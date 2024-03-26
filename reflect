@@ -62,6 +62,16 @@
 #include <tuple>
 #include <utility>
 
+#if __has_include(<mp>)
+struct reflect_meta_info {
+  size_t (*size_of)();
+  std::string_view (*name)();
+  std::string_view (*type)();
+};
+#define MP_META_INFO reflect_meta_info
+#include <mp>
+#endif
+
 #if not defined(REFLECT_ENUM_MIN)
 #define REFLECT_ENUM_MIN -1
 #endif
@@ -494,14 +504,41 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
     (REFLECT_FWD(fn)(std::integral_constant<decltype(Ns), Ns>{}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
+
+#if __has_include(<mp>)
+template<class T>
+[[nodiscard]] constexpr auto reflect(T&& t) {
+  return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {
+    return mp::vector{mp::meta<T(decltype(reflect::get<Ns>(static_cast<T&&>(t))), std::integral_constant<decltype(Ns), Ns>)>...};
+  }(mp::utility::make_index_sequence<reflect::size<T>()>{});
+}
+
+#endif
 } // namespace reflect
+
+#if __has_include(<mp>)
+template<class B, class R, class I>
+struct mp::detail::meta_info<B(R,I)> {
+  using value_type = R;
+
+  static constexpr reflect_meta_info info{
+    [] { return sizeof(R); },
+    [] { return reflect::member_name<I::value, B>(); },
+    [] { return reflect::type_name<R>(); }
+  };
+
+  constexpr auto friend get(meta_id<meta_t{&info}>) { return meta_info{}; }
+
+  template<class T> static constexpr decltype(auto) value_of(T&& t) {
+    return reflect::get<I::value>(static_cast<T&&>(t));
+  }
+};
+#endif
 
 #undef REFLECT_FWD_LIKE
 #undef REFLECT_FWD
-#endif  // REFLECT
-#endif
 
-#if not defined(REFLECT_DISABLE_STATIC_ASSERT_TESTS)
+#if not defined(DISABLE_STATIC_ASSERT_TESTS)
 namespace REFLECT_TEST {
 struct empty { };
 struct foo { using type = int; enum E { }; };
@@ -1154,4 +1191,6 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     expect(f._1 == value[0] and f._2 == value[1]);
   }
 }(), true));
+#endif
+#endif  // REFLECT
 #endif

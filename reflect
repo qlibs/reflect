@@ -53,7 +53,7 @@
 #error "[error][reflect] <tuple> not found!"
 #else
 #ifndef REFLECT
-#define REFLECT 1'1'0 // SemVer
+#define REFLECT 1'1'1 // SemVer
 
 #include <array>
 #include <string_view>
@@ -82,7 +82,7 @@ struct  REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to b
 /**
  * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect) [https://godbolt.org/z/M747ocGfx]
  */
-namespace reflect::inline v1_1_0 {
+namespace reflect::inline v1_1_1 {
 namespace detail {
 template<class T> extern const T ext{};
 struct any { template<class T> constexpr operator T() const noexcept; };
@@ -523,7 +523,7 @@ struct mp::detail::meta_info<B(R,I)> {
 #endif
 
 #if defined(MP)
-namespace reflect::inline v1_1_0 {
+namespace reflect::inline v1_1_1 {
 template<class T>
 [[nodiscard]] constexpr auto reflect(T&& t) {
   return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {

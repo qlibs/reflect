@@ -210,12 +210,12 @@ enum_name<E>::operator()<879>
 > [include] https://raw.githubusercontent.com/boost-ext/reflect/main/reflect
 
 ```cpp
-time g++-13.2 -x c++ -std=c++20 reflect -c -DREFLECT_DISABLE_STATIC_ASSERT_TESTS   # 0.113s
+time g++-13.2 -x c++ -std=c++20 reflect -c -DDISABLE_STATIC_ASSERT_TESTS   # 0.113s
 time g++-13.2 -x c++ -std=c++20 reflect -c                                         # 0.253s
 ```
 
 ```cpp
-time clang++-17 -x c++ -std=c++20 reflect -c -DREFLECT_DISABLE_STATIC_ASSERT_TESTS # 0.119s
+time clang++-17 -x c++ -std=c++20 reflect -c -DDISABLE_STATIC_ASSERT_TESTS # 0.119s
 time clang++-17 -x c++ -std=c++20 reflect -c                                       # 0.322s
 ```
 
@@ -463,13 +463,13 @@ reflect::for_each([&f](const auto I) {
 > Configuration
 
 ```cpp
-#define REFLECT 1'1'0                       // Current library version (SemVer)
-#define REFLECT_ENUM_MIN -1                 // Min size for enum name (can be overridden)
-                                            // For example: `-DREFLECT_ENUM_MIN=0`
-#define REFLECT_ENUM_MAX 1024               // Max size for enum name (can be overridden)
-                                            // For example: `-DREFLECT_ENUM_MAX=32`
-#define REFLECT_DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests
-                                            // Not enabled by default (use with caution)
+#define REFLECT 1'1'0               // Current library version (SemVer)
+#define REFLECT_ENUM_MIN -1         // Min size for enum name (can be overridden)
+                                    // For example: `-DREFLECT_ENUM_MIN=0`
+#define REFLECT_ENUM_MAX 1024       // Max size for enum name (can be overridden)
+                                    // For example: `-DREFLECT_ENUM_MAX=32`
+#define DISABLE_STATIC_ASSERT_TESTS // Disables running static_asserts tests
+                                    // Not enabled by default (use with caution)
 ```
 ---
 
@@ -501,7 +501,7 @@ reflect::for_each([&f](const auto I) {
 
 - Can I disable running tests at compile-time for faster compilation times?
 
-    > When `REFLECT_DISABLE_STATIC_ASSERT_TESTS` is defined static_asserts tests won't be executed upon inclusion.
+    > When `DISABLE_STATIC_ASSERT_TESTS` is defined static_asserts tests won't be executed upon inclusion.
     Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 
 - How to extend number of members to be reflected (default: 64)?

@@ -62,18 +62,6 @@
 #include <tuple>
 #include <utility>
 
-#if not defined(MP)
-struct reflect_meta_info {
-  size_t (*size_of)();
-  std::string_view (*name)();
-  std::string_view (*type)();
-};
-#define MP_META_INFO reflect_meta_info
-#if __has_include(<mp>)
-#include <mp>
-#endif
-#endif
-
 #if not defined(REFLECT_ENUM_MIN)
 #define REFLECT_ENUM_MIN -1
 #endif
@@ -506,19 +494,16 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
     (REFLECT_FWD(fn)(std::integral_constant<decltype(Ns), Ns>{}), ...);
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
-
-#if __has_include(<mp>)
-template<class T>
-[[nodiscard]] constexpr auto reflect(T&& t) {
-  return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {
-    return mp::vector{mp::meta<T(decltype(reflect::get<Ns>(static_cast<T&&>(t))), std::integral_constant<decltype(Ns), Ns>)>...};
-  }(mp::utility::make_index_sequence<reflect::size<T>()>{});
-}
-
-#endif
 } // namespace reflect
 
-#if not defined(MP)
+#if not defined(MP) and __has_include(<mp>)
+#define MP_META_INFO reflect_meta_info
+struct reflect_meta_info {
+  size_t (*size_of)();
+  std::string_view (*name)();
+  std::string_view (*type)();
+};
+#include <mp>
 template<class B, class R, class I>
 struct mp::detail::meta_info<B(R,I)> {
   using value_type = R;
@@ -535,6 +520,17 @@ struct mp::detail::meta_info<B(R,I)> {
     return reflect::get<I::value>(static_cast<T&&>(t));
   }
 };
+#endif
+
+#if defined(MP)
+namespace reflect::inline v1_1_0 {
+template<class T>
+[[nodiscard]] constexpr auto reflect(T&& t) {
+  return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {
+    return mp::vector{mp::meta<T(decltype(reflect::get<Ns>(static_cast<T&&>(t))), std::integral_constant<decltype(Ns), Ns>)>...};
+  }(mp::utility::make_index_sequence<reflect::size<T>()>{});
+}
+} // namespace reflect
 #endif
 
 #undef REFLECT_FWD_LIKE

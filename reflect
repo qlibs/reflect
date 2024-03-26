@@ -62,14 +62,16 @@
 #include <tuple>
 #include <utility>
 
-#if __has_include(<mp>)
+#if not defined(MP)
 struct reflect_meta_info {
   size_t (*size_of)();
   std::string_view (*name)();
   std::string_view (*type)();
 };
 #define MP_META_INFO reflect_meta_info
+#if __has_include(<mp>)
 #include <mp>
+#endif
 #endif
 
 #if not defined(REFLECT_ENUM_MIN)
@@ -516,7 +518,7 @@ template<class T>
 #endif
 } // namespace reflect
 
-#if __has_include(<mp>)
+#if not defined(MP)
 template<class B, class R, class I>
 struct mp::detail::meta_info<B(R,I)> {
   using value_type = R;

@@ -128,80 +128,30 @@ member_name<0ul, foo>
 ```
 
 ```cpp
-enum class E { negative = -1, big = 879, _3 = 3, _4 = 4, _5 = 5, _6 = 6, _7 = 7, };
+enum class E { A, B, };
 auto enum_name(const E e) { return reflect::enum_name(e); }
 ```
 
 ```asm
 enum_name(E): // $CXX -O3 -DNDEBUG (generates switch)
-        lea     ecx, [rdi + 1]
-        cmp     ecx, 6
-        ja      .LBB2_6
-        mov     eax, 2
-        lea     rdx, [rip + .LJTI2_0]
-        movsxd  rcx, dword ptr [rdx + 4*rcx]
-        add     rcx, rdx
-        jmp     rcx
-.LBB2_3:
-        lea     rdx, [rip + enum_name<E>::operator()<-1>]
-        mov     eax, 8
-        ret
-.LBB2_5:
-        lea     rdx, [rip + enum_name<E>::operator()<4>]
-        ret
-.LBB2_4:
-        lea     rdx, [rip + enum_name<E>::operator()<3>]
-        ret
-.LBB2_2:
-        lea     rdx, [rip + enum_name<E>::operator()<5>]
-        ret
-.LBB2_6:
-        xor     ecx, ecx
         xor     eax, eax
-        cmp     edi, 879
-        sete    al
-        lea     rdx, [rip + enum_name<E>::operator()<879>]
-        cmove   rcx, rdx
-        cmp     edi, 7
-        lea     rax, [rax + 2*rax]
-        mov     esi, 2
-        cmove   rax, rsi
-        lea     r8, [rip + enum_name<E>::operator()<7>]
-        cmovne  r8, rcx
-        cmp     edi, 6
-        lea     rdx, [rip + enum_name<E>::operator()<6>]
-        cmovne  rdx, r8
-        cmove   rax, rsi
+        xor     ecx, ecx
+        cmp     edi, 1
+        sete    cl
+        lea     rdx, [rip + enum_name<0>]
+        cmove   rax, rdx
+        test    edi, edi
+        lea     rdx, [rip + enum_name<1>]
+        cmovne  rdx, rax
+        mov     eax, 1
+        cmovne  rax, rcx
         ret
-.LJTI2_0:
-        .long   .LBB2_3-.LJTI2_0
-        .long   .LBB2_6-.LJTI2_0
-        .long   .LBB2_6-.LJTI2_0
-        .long   .LBB2_6-.LJTI2_0
-        .long   .LBB2_4-.LJTI2_0
-        .long   .LBB2_5-.LJTI2_0
-        .long   .LBB2_2-.LJTI2_0
 
-enum_name<E>::operator()<-1>
-        .ascii  "negative"
+enum_name<0ul>:
+        .ascii  "A"
 
-enum_name<E>::operator()<3>
-        .ascii  "_3"
-
-enum_name<E>::operator()<4>
-        .ascii  "_4"
-
-enum_name<E>::operator()<5>
-        .ascii  "_5"
-
-enum_name<E>::operator()<6>
-        .ascii  "_6"
-
-enum_name<E>::operator()<7>
-        .ascii  "_7"
-
-enum_name<E>::operator()<879>
-        .ascii  "big"
+enum_name<1ul>:
+        .ascii  "B"
 ```
 
 <a name="comp"></a>

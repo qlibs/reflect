@@ -85,7 +85,7 @@ struct  REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to b
 namespace reflect::inline v1_1_1 {
 namespace detail {
 template<class T> extern const T ext{};
-struct any { template<class T> constexpr operator T() const noexcept; };
+struct any { template<class T> operator T() const noexcept; };
 template<auto...> struct auto_ { constexpr explicit(false) auto_(auto&&...) noexcept { } };
 template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
@@ -540,6 +540,11 @@ template<class T>
 namespace REFLECT_TEST {
 struct empty { };
 struct foo { using type = int; enum E { }; };
+template<class T> struct optional {
+  constexpr optional() = default;
+  constexpr optional(T t) : t{t} { }
+  T t{};
+};
 struct bar { };
 template<class T> struct foo_t { };
 namespace ns::inline v1 { template<auto...> struct bar_v { }; } // ns
@@ -600,7 +605,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   {
     struct empty {};
     struct one { int a; };
-    struct two { int a; int b; };
+    struct two { int a; REFLECT_TEST::optional<int> o; };
 
     static_assert(0 == size<empty>());
     static_assert(0 == size(empty{}));

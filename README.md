@@ -19,7 +19,7 @@
 - Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors | /W4 /WX`](https://godbolt.org/z/M747ocGfx))
 - Agnostic to compiler changes (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
 - Optimized run-time execution and binary size (see [performance](#perf))
-- Fast compilation times (see [Compilation times](#comp))
+- Fast compilation times (see [compilation times](#comp))
 
 ### Requirements
 
@@ -162,12 +162,12 @@ enum_name<1ul>:
 
 ```cpp
 time g++-13.2 -x c++ -std=c++20 reflect -c -DDISABLE_STATIC_ASSERT_TESTS   # 0.113s
-time g++-13.2 -x c++ -std=c++20 reflect -c                                         # 0.253s
+time g++-13.2 -x c++ -std=c++20 reflect -c                                 # 0.253s
 ```
 
 ```cpp
 time clang++-17 -x c++ -std=c++20 reflect -c -DDISABLE_STATIC_ASSERT_TESTS # 0.119s
-time clang++-17 -x c++ -std=c++20 reflect -c                                       # 0.322s
+time clang++-17 -x c++ -std=c++20 reflect -c                               # 0.322s
 ```
 
 ---

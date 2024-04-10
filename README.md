@@ -17,9 +17,9 @@
 - Verifies itself upon include (aka run all tests via static_asserts but it can be disabled - see [FAQ](#faq))
     - Basically guarantees no UB, no memory leaks*
 - Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors | /W4 /WX`](https://godbolt.org/z/M747ocGfx))
-- Compiler changes agnostic (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
-- Optimized run-time execution and binary-size (see [performance](#perf))
-- Fast compilation-times (see [compilation-times](#comp))
+- Agnostic to compiler changes (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
+- Optimized run-time execution and binary size (see [performance](#perf))
+- Fast compilation times (see [Compilation times](#comp))
 
 ### Requirements
 
@@ -426,36 +426,36 @@ reflect::for_each([&f](const auto I) {
 
 ### FAQ
 
-- How `reflect` compares to https://wg21.link/P2996?
+- How does `reflect` compare to https://wg21.link/P2996?
 
-    > `reflect` library only provides basic reflection primitvies, mostly via hacks and workarounds to deal with lack of the reflection.
-    https://wg21.link/P2996 is a language proprosal with a lot of more features and capabilities. It's like comparing a drop in the ocean to the entire sea!
+    > `reflect` library only provides basic reflection primitives, mostly via hacks and workarounds to deal with lack of the reflection.
+    https://wg21.link/P2996 is a language proposal with many more features and capabilities. It's like comparing a drop in the ocean to the entire sea!
 
-- How `reflect` works under the hood?
+- How does `reflect` work under the hood?
 
-    > There are a many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
+    > There are many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
 
-- How `reflect` can be compiler changes agnostic?
+- How can `reflect` be agnostic to compiler changes?
 
     > `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
-    Any compiler change will end up with new prefixes/postfixes and won't require additional maintanace.
+    Any compiler change will end up with new prefixes/postfixes and won't require additional maintenance.
 
 - What does it mean that `reflect` tests itself upon include?
 
-    > `reflect` runs all tests (via static_asserts) upon include. If the include compiled it means all tests are passing and the library works correctly on given compiler, enviornment.
+    > `reflect` runs all tests (via static_asserts) upon include. If the include compiles it means all tests are passing and the library works correctly on given compiler, environment.
 
 - What is compile-time overhead of `reflect` library?
 
     > `reflect` include takes ~.2s (that includes running all tests).
-    The most expensive calls are `visit` and `enum_to_name` which timing will depend on the number of reflected elements and/or min/max values provided.
+    The most expensive calls are `visit` and `enum_to_name` whose timing will depend on the number of reflected elements and/or min/max values provided.
     There are no recursive template instantiations in the library.
 
 - Can I disable running tests at compile-time for faster compilation times?
 
     > When `DISABLE_STATIC_ASSERT_TESTS` is defined static_asserts tests won't be executed upon inclusion.
-    Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
+    Note: Use with caution as disabling tests means that there are no guarantees upon inclusion that the given compiler/env combination works as expected.
 
-- How to extend number of members to be reflected (default: 64)?
+- How to extend the number of members to be reflected (default: 64)?
 
     > Override `visit`, for example - https://godbolt.org/z/Ga3bc3KKW
 

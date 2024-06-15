@@ -85,6 +85,7 @@ namespace reflect::inline v1_1_1 {
 namespace detail {
 template<class T> extern const T ext{};
 struct any { template<class T> operator T() const noexcept; };
+template<class T> struct any_except_base_of { template<class U> requires (not std::is_base_of_v<U, T>) operator U() const noexcept; };
 template<auto...> struct auto_ { constexpr explicit(false) auto_(auto&&...) noexcept { } };
 template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
@@ -150,9 +151,11 @@ namespace detail {
 template<class T, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
-    return sizeof...(Ts);
-  } else {
+    return (0 + ... + std::is_same_v<Ts, detail::any_except_base_of<T>>);
+  } else if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any_except_base_of<T>{}}; }) {
     return size<T, Ts..., detail::any>();
+  } else {
+    return size<T, Ts..., detail::any_except_base_of<T>>();
   }
 }
 } // namespace detail
@@ -605,6 +608,13 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     struct empty {};
     struct one { int a; };
     struct two { int a; REFLECT_TEST::optional<int> o; };
+    struct empty_with_base : empty {};
+    struct one_with_base : empty { int a; };
+    struct two_with_base : empty { int a; REFLECT_TEST::optional<int> o; };
+    struct base {};
+    struct empty_with_bases : empty, base {};
+    struct one_with_bases : empty, base { int a; };
+    struct two_with_bases : empty, base { int a; REFLECT_TEST::optional<int> o; };
 
     static_assert(0 == size<empty>());
     static_assert(0 == size(empty{}));
@@ -612,9 +622,27 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(1 == size(one{}));
     static_assert(2 == size<two>());
     static_assert(2 == size(two{}));
+    static_assert(0 == size<empty_with_base>());
+    static_assert(0 == size(empty_with_base{}));
+    static_assert(1 == size<one_with_base>());
+    static_assert(1 == size(one_with_base{}));
+    static_assert(2 == size<two_with_base>());
+    static_assert(2 == size(two_with_base{}));
+    static_assert(0 == size<empty_with_bases>());
+    static_assert(0 == size(empty_with_bases{}));
+    static_assert(1 == size<one_with_bases>());
+    static_assert(1 == size(one_with_bases{}));
+    static_assert(2 == size<two_with_bases>());
+    static_assert(2 == size(two_with_bases{}));
     static_assert(0 == size<const empty>());
     static_assert(1 == size<const one>());
     static_assert(2 == size<const two>());
+    static_assert(0 == size<const empty_with_base>());
+    static_assert(1 == size<const one_with_base>());
+    static_assert(2 == size<const two_with_base>());
+    static_assert(0 == size<const empty_with_bases>());
+    static_assert(1 == size<const one_with_bases>());
+    static_assert(2 == size<const two_with_bases>());
 
     struct non_standard_layout {
      private:

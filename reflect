@@ -538,7 +538,7 @@ template<class T>
 #undef REFLECT_FWD_LIKE
 #undef REFLECT_FWD
 
-#if not defined(DISABLE_STATIC_ASSERT_TESTS)
+#if not defined(NTEST)
 namespace REFLECT_TEST {
 struct empty { };
 struct foo { using type = int; enum E { }; };

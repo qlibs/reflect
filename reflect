@@ -400,10 +400,89 @@ template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(REFLECT_FWD(args)...); }, REFLECT_FWD(t));
 }
 
+namespace detail {
+template<class T, auto Name>
+inline constexpr bool has_member_name_impl = []<auto... Ns>(std::index_sequence<Ns...>) {
+  return ((Name == member_name<Ns, T>()) or ...);
+}(std::make_index_sequence<size<T>()>{});
+
 template<class T, fixed_string Name>
-concept has_member_name = []<auto... Ns>(std::index_sequence<Ns...>) {
-  return ((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) or ...);
-}(std::make_index_sequence<size<std::remove_cvref_t<T>>()>{});
+[[nodiscard]] consteval auto diagnose_member_name() {
+  constexpr std::string_view prefix = "`";
+  constexpr std::string_view type = type_name<T>();
+  if constexpr (size<T>() == 0) {
+    constexpr std::string_view suffix = "` has no data members.";
+    char message[prefix.size() + type.size() + suffix.size() + 1];
+    auto out = message;
+    for (const auto c : prefix) *out++ = c;
+    for (const auto c : type) *out++ = c;
+    for (const auto c : suffix) *out++ = c;
+    *out = '\0';
+    return fixed_string{message};
+  } else {
+    constexpr std::string_view infix1 = "` has no data member named `";
+    constexpr std::string_view incorrect = Name;
+    constexpr std::string_view infix2 = "`. Did you mean `";
+    constexpr std::string_view correct = [] {
+      constexpr auto distance = [](std::string_view correct) {
+        constexpr std::string_view incorrect = Name;
+        std::array<std::size_t, incorrect.size() + 1> prev;
+        std::array<std::size_t, incorrect.size() + 1> curr{};
+        for (decltype(prev.size()) i{}; i < prev.size(); ++i) prev[i] = i;
+        for (decltype(correct.size()) i{}; i < correct.size(); ++i) {
+          curr[0] = i + 1;
+          for (decltype(incorrect.size()) j{}; j < incorrect.size(); ++j) {
+            const auto del = prev[j + 1] + 1;
+            const auto ins = curr[j] + 1;
+            const auto sub = prev[j] + (correct[i] != incorrect[j]);
+            const auto min_del_ins = del < ins ? del : ins;
+            curr[j + 1] = min_del_ins < sub ? min_del_ins : sub;
+          }
+          auto temp = curr;
+          curr = prev;
+          prev = temp;
+        }
+        return prev.back();
+      };
+      const auto member_names = []<auto... Ns>(std::index_sequence<Ns...>) {
+        return std::array<std::string_view, sizeof...(Ns)>{member_name<Ns, T>()...};
+      }(std::make_index_sequence<size<T>()>{});
+      auto closest_name = member_names[0];
+      auto min_distance = distance(closest_name);
+      for (decltype(member_names.size()) n{1}; n < member_names.size(); ++n) {
+        const auto nth_member_name = member_names[n];
+        const auto nth_distance = distance(nth_member_name);
+        if (nth_distance < min_distance) {
+          closest_name = nth_member_name;
+          min_distance = nth_distance;
+        }
+      }
+      return closest_name;
+    }();
+    constexpr std::string_view suffix = "`?";
+    char message[prefix.size() + type.size() + infix1.size() + incorrect.size() + infix2.size() + correct.size() + suffix.size() + 1];
+    auto out = message;
+    for (const auto c : prefix) *out++ = c;
+    for (const auto c : type) *out++ = c;
+    for (const auto c : infix1) *out++ = c;
+    for (const auto c : incorrect) *out++ = c;
+    for (const auto c : infix2) *out++ = c;
+    for (const auto c : correct) *out++ = c;
+    for (const auto c : suffix) *out++ = c;
+    *out = '\0';
+    return fixed_string{message};
+  }
+}
+
+template <auto Message>
+concept diagnosis = Message == std::string_view{};
+
+template <class T, auto Name>
+concept member_name_diagnosis = diagnosis<diagnose_member_name<T, Name>()>;
+} // namespace detail
+
+template<class T, fixed_string Name>
+concept has_member_name = detail::has_member_name_impl<std::remove_cvref_t<T>, Name> or detail::member_name_diagnosis<std::remove_cvref_t<T>, Name>;
 
 template<fixed_string Name, class T>
   requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
@@ -898,6 +977,19 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(not has_member_name<foo, "baz">);
     static_assert(not has_member_name<foo, "BAR">);
     static_assert(not has_member_name<foo, "">);
+  }
+
+  // diagnose_member_name
+  {
+    struct foo { bool flag; int bar; };
+    static_assert(detail::diagnose_member_name<foo, "">() == "`foo` has no data member named ``. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "ba">() == "`foo` has no data member named `ba`. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "fl">() == "`foo` has no data member named `fl`. Did you mean `flag`?");
+    static_assert(detail::diagnose_member_name<foo, "baz">() == "`foo` has no data member named `baz`. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "lag">() == "`foo` has no data member named `lag`. Did you mean `flag`?");
+
+    struct empty {};
+    static_assert(detail::diagnose_member_name<empty, "any">() == "`empty` has no data members.");
   }
 
   // get [by name]

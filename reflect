@@ -474,11 +474,14 @@ template<class T, fixed_string Name>
   }
 }
 
-template <auto Message>
-concept diagnosis = Message == std::string_view{};
+template<auto Message>
+struct print { static constexpr auto value = false; };
 
-template <class T, auto Name>
-concept member_name_diagnosis = diagnosis<diagnose_member_name<T, Name>()>;
+template<class TMessage>
+concept diagnosis = TMessage::value;
+
+template<class T, auto Name>
+concept member_name_diagnosis = diagnosis<print<diagnose_member_name<T, Name>()>>;
 } // namespace detail
 
 template<class T, fixed_string Name>

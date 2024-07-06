@@ -256,7 +256,7 @@ template<class T>
   using type_name_info = detail::type_name_info<std::remove_pointer_t<std::remove_cvref_t<T>>>;
   constexpr std::string_view function_name = detail::function_name<std::remove_pointer_t<std::remove_cvref_t<T>>>();
   constexpr std::string_view qualified_type_name = function_name.substr(type_name_info::begin, function_name.find(type_name_info::end)-type_name_info::begin);
-  constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
+  constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<", 1));
   constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
   static_assert(std::size(type_name) > 0u);
   if (std::is_constant_evaluated()) {
@@ -815,7 +815,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(2 == size(anonymous));
   }
 
-  // viist
+  // visit
   {
     struct empty {};
     static_assert(0 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, empty{}));
@@ -829,6 +829,8 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
   // type_name
   {
+    struct local {};
+
     static_assert(std::string_view{"void"} == type_name<void>());
     static_assert(std::string_view{"int"} == type_name<int>());
     static_assert(std::string_view{"empty"} == type_name<REFLECT_TEST::empty>());
@@ -844,6 +846,8 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<>>());
     static_assert(std::string_view{"int"} == type_name(REFLECT_TEST::foo::type{}));
     static_assert(std::string_view{"E"} == type_name(REFLECT_TEST::foo::E{}));
+    static_assert(std::string_view{"local"} == type_name<local>());
+    static_assert(std::string_view{"local"} == type_name(local{}));
   }
 
   // type_id

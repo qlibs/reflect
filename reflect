@@ -151,14 +151,14 @@ struct fixed_string {
 template<class T, std::size_t Capacity, std::size_t Size = Capacity-1> fixed_string(const T (&str)[Capacity]) -> fixed_string<T, Size>;
 
 namespace detail {
-template<class T, class... Ts> requires std::is_aggregate_v<T>
+template<class T, std::size_t Bases = 0, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
-    return (0 + ... + std::is_same_v<Ts, detail::any_except_base_of<T>>);
-  } else if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any_except_base_of<T>{}}; }) {
-    return size<T, Ts..., detail::any>();
+    return sizeof...(Ts) - Bases;
+  } else if constexpr (Bases == sizeof...(Ts) and requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any_except_base_of<T>{}}; }) {
+    return size<T, Bases + 1, Ts..., detail::any>();
   } else {
-    return size<T, Ts..., detail::any_except_base_of<T>>();
+    return size<T, Bases, Ts..., detail::any>();
   }
 }
 } // namespace detail
@@ -697,6 +697,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     struct empty_with_bases : empty, base {};
     struct one_with_bases : empty, base { int a; };
     struct two_with_bases : empty, base { int a; REFLECT_TEST::optional<int> o; };
+    struct two_with_base_member : empty, base { int a; base b; };
 
     static_assert(0 == size<empty>());
     static_assert(0 == size(empty{}));
@@ -716,6 +717,8 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(1 == size(one_with_bases{}));
     static_assert(2 == size<two_with_bases>());
     static_assert(2 == size(two_with_bases{}));
+    static_assert(2 == size<two_with_base_member>());
+    static_assert(2 == size(two_with_base_member{}));
     static_assert(0 == size<const empty>());
     static_assert(1 == size<const one>());
     static_assert(2 == size<const two>());
@@ -725,6 +728,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(0 == size<const empty_with_bases>());
     static_assert(1 == size<const one_with_bases>());
     static_assert(2 == size<const two_with_bases>());
+    static_assert(2 == size<const two_with_base_member>());
 
     struct non_standard_layout {
      private:

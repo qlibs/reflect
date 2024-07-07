@@ -1,6 +1,6 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
-<a href="https://godbolt.org/z/M747ocGfx">![build](https://img.shields.io/badge/build-blue.svg)</a>
+<a href="https://godbolt.org/z/zvooxGPP9">![build](https://img.shields.io/badge/build-blue.svg)</a>
 <a href="https://godbolt.org/z/EW1evKeW4">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------

@@ -410,16 +410,7 @@ template<class T, fixed_string Name>
 [[nodiscard]] consteval auto diagnose_member_name() {
   constexpr std::string_view prefix = "`";
   constexpr std::string_view type = type_name<T>();
-  if constexpr (size<T>() == 0) {
-    constexpr std::string_view suffix = "` has no data members.";
-    char message[prefix.size() + type.size() + suffix.size() + 1];
-    auto out = message;
-    for (const auto c : prefix) *out++ = c;
-    for (const auto c : type) *out++ = c;
-    for (const auto c : suffix) *out++ = c;
-    *out = '\0';
-    return fixed_string{message};
-  } else {
+  if constexpr (size<T>()) {
     constexpr std::string_view infix1 = "` has no data member named `";
     constexpr std::string_view incorrect = Name;
     constexpr std::string_view infix2 = "`. Did you mean `";
@@ -468,6 +459,15 @@ template<class T, fixed_string Name>
     for (const auto c : incorrect) *out++ = c;
     for (const auto c : infix2) *out++ = c;
     for (const auto c : correct) *out++ = c;
+    for (const auto c : suffix) *out++ = c;
+    *out = '\0';
+    return fixed_string{message};
+  } else {
+    constexpr std::string_view suffix = "` has no data members.";
+    char message[prefix.size() + type.size() + suffix.size() + 1];
+    auto out = message;
+    for (const auto c : prefix) *out++ = c;
+    for (const auto c : type) *out++ = c;
     for (const auto c : suffix) *out++ = c;
     *out = '\0';
     return fixed_string{message};
@@ -582,44 +582,6 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
 } // namespace reflect
-
-#if not defined(MP) and __has_include(<mp>)
-#define MP_META_INFO reflect_meta_info
-struct reflect_meta_info {
-  size_t (*size_of)();
-  std::string_view (*name)();
-  std::string_view (*type)();
-};
-#include <mp>
-template<class B, class R, class I>
-struct mp::detail::meta_info<B(R,I)> {
-  using value_type = R;
-
-  static constexpr reflect_meta_info info{
-    [] { return sizeof(R); },
-    [] { return reflect::member_name<I::value, B>(); },
-    [] { return reflect::type_name<R>(); }
-  };
-
-  constexpr auto friend get(meta_id<meta_t{&info}>) { return meta_info{}; }
-
-  template<class T> static constexpr decltype(auto) value_of(T&& t) {
-    return reflect::get<I::value>(static_cast<T&&>(t));
-  }
-};
-#endif
-
-#if defined(MP)
-namespace reflect::inline v1_1_1 {
-template<class T>
-[[nodiscard]] constexpr auto reflect(T&& t) {
-  return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {
-    return mp::vector{mp::meta<T(decltype(reflect::get<Ns>(static_cast<T&&>(t))), std::integral_constant<decltype(Ns), Ns>)>...};
-  }(mp::utility::make_index_sequence<reflect::size<T>()>{});
-}
-} // namespace reflect
-#endif
-
 #undef REFLECT_FWD_LIKE
 #undef REFLECT_FWD
 

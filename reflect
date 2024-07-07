@@ -52,7 +52,7 @@
 #error "[error][reflect] <tuple> not found!"
 #else
 #ifndef REFLECT
-#define REFLECT 1'1'1 // SemVer
+#define REFLECT 1'2'0 // SemVer
 
 #include <array>
 #include <string_view>

@@ -282,18 +282,36 @@ template<class T, std::size_t Size>
 struct static_vector {
   constexpr static_vector() = default;
   constexpr auto push_back(const T& value) { values_[size_++] = value; }
-  [[nodiscard]] constexpr auto operator[](auto i) const { return values_[i]; }
+  [[nodiscard]] constexpr const auto& operator[](auto i) const { return values_[i]; }
+  [[nodiscard]] constexpr auto begin() const { return &values_[0]; }
+  [[nodiscard]] constexpr auto end() const { return &values_[0] + size_; }
   [[nodiscard]] constexpr auto size() const { return size_; }
+  [[nodiscard]] constexpr auto empty() const { return not size_; }
+  [[nodiscard]] constexpr auto capacity() const { return Size; }
   std::array<T, Size> values_{};
   std::size_t size_{};
 };
-
+template<class E, auto N> requires std::is_enum_v<E>
+[[nodiscard]] constexpr auto enum_name() {
+  constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
+  constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
+  constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
+  static_assert(std::size(enum_name) > 0u);
+  if (std::is_constant_evaluated()) {
+    return enum_name;
+  } else {
+    return [&] {
+      static constexpr const auto static_name = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
+      return std::string_view{static_name};
+    }();
+  }
+}
 #if defined(__clang__) and (__clang_major__ > 15)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
 template<class E, auto Min, auto Max> requires (std::is_enum_v<E> and Max > Min)
-constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
+inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
   const auto names = detail::function_name<static_cast<E>(Ns+Min)...>();
   const auto begin = detail::enum_name_info::begin;
   const auto end = std::size(names)-detail::enum_name_info::end;
@@ -313,54 +331,38 @@ constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
   }
   return cases;
 }(std::make_index_sequence<Max-Min+1/*inclusive*/>{});
-
-template<class E, auto N> requires std::is_enum_v<E>
-[[nodiscard]] constexpr auto enum_name () {
-  constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
-  constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-  constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
-  static_assert(std::size(enum_name) > 0u);
-  if (std::is_constant_evaluated()) {
-    return enum_name;
-  } else {
-    return [&] {
-      static constexpr const auto static_name = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
-      return std::string_view{static_name};
-    }();
-  }
-}
 #if defined(__clang__) and (__clang_major__ > 15)
   #pragma clang diagnostic pop
 #endif
 } // namespace detail
 
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+template<class E> requires std::is_enum_v<E> consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+template<class E> requires std::is_enum_v<E> consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
 
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
+template<class E, auto Min = enum_min(E{}), auto Max = enum_max(E{}), auto enum_cases = detail::enum_cases<E, Min, Max>>
+inline constexpr auto enumerators = []<auto... Ns>(std::index_sequence<Ns...>) {
+  return std::array{std::pair{enum_cases[Ns], detail::enum_name<E, enum_cases[Ns]>()}...};
+}(std::make_index_sequence<enum_cases.size()>{});
 
 template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
-  if constexpr (constexpr auto enum_cases = detail::enum_cases<E, Min, Max>; std::size(enum_cases) > 0) {
+  if constexpr (constexpr auto enumerators = reflect::enumerators<E, Min, Max>; std::empty(enumerators)) {
+    return unknown;
+  } else {
     const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
-      switch (value) {
-        case enum_cases[I]: {
-          return detail::enum_name<E, enum_cases[I]>();
-        }
-        default: {
-          if constexpr (I < std::size(enum_cases)-1) {
+      if constexpr (I == std::size(enumerators)) {
+        return unknown;
+      } else {
+        switch (value) {
+          default:
             return switch_case.template operator()<I+1>(switch_case, value);
-          } else {
-            return unknown;
-          }
+          case enumerators[I].first:
+            return enumerators[I].second;
         }
       }
     };
     return switch_case(switch_case, to_underlying(e));
-  } else {
-    return unknown;
   }
 }
 

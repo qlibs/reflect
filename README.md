@@ -414,7 +414,7 @@ reflect::for_each([&f](const auto I) {
 > Configuration
 
 ```cpp
-#define REFLECT 1'2'0           // Current library version (SemVer)
+#define REFLECT 1'2'1           // Current library version (SemVer)
 #define REFLECT_ENUM_MIN -1     // Min size for enum name (can be overridden)
                                 // For example: `-DREFLECT_ENUM_MIN=0`
 #define REFLECT_ENUM_MAX 128    // Max size for enum name (can be overridden)
@@ -473,7 +473,7 @@ reflect::for_each([&f](const auto I) {
     CPMAddPackage(
       Name reflect
       GITHUB_REPOSITORY boost-ext/reflect
-      GIT_TAG v1.2.0
+      GIT_TAG v1.2.1
     )
     add_library(reflect INTERFACE)
     target_include_directories(reflect SYSTEM INTERFACE ${reflect_SOURCE_DIR})

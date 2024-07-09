@@ -298,18 +298,16 @@ inline constexpr auto enumerators = []<auto... Ns>(std::index_sequence<Ns...>) {
 template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
-  if constexpr (constexpr auto enumerators = reflect::enumerators<E, Min, Max>; std::empty(enumerators)) {
+  if constexpr (constexpr auto cases = enumerators<E, Min, Max>; std::empty(cases)) {
     return unknown;
   } else {
     const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
-      if constexpr (I == std::size(enumerators)) {
+      if constexpr (I == std::size(cases)) {
         return unknown;
       } else {
         switch (value) {
-          default:
-            return switch_case.template operator()<I+1>(switch_case, value);
-          case enumerators[I].first:
-            return enumerators[I].second;
+          default:             return switch_case.template operator()<I+1>(switch_case, value);
+          case cases[I].first: return cases[I].second;
         }
       }
     };

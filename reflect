@@ -14,6 +14,7 @@
 #include <tuple>
 #include <utility>
 #include <limits>
+#include <cstdint>
 
 #if not defined(REFLECT_ENUM_MIN)
 #define REFLECT_ENUM_MIN -1

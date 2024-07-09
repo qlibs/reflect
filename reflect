@@ -4,53 +4,6 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
-#if !defined(__cpp_rvalue_references)
-#error "[error][reflect] __cpp_rvalue_references not supported!"
-#elif !defined(__cpp_decltype)
-#error "[error][reflect] __cpp_decltype not supported!"
-#elif !defined(__cpp_decltype_auto)
-#error "[error][reflect] __cpp_decltype_auto not supported!"
-#elif !defined(__cpp_return_type_deduction)
-#error "[error][reflect] __cpp_return_type_deduction not supported!"
-#elif !defined(__cpp_deduction_guides)
-#error "[error][reflect] __cpp_deduction_guides not supported!"
-#elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect] __cpp_generic_lambdas not supported!"
-#elif !defined(__cpp_constexpr)
-#error "[error][reflect] __cpp_constexpr not supported!"
-#elif !defined(__cpp_if_constexpr)
-#error "[error][reflect] __cpp_if_constexpr not supported!"
-#elif !defined(__cpp_alias_templates)
-#error "[error][reflect] __cpp_alias_templates not supported!"
-#elif !defined(__cpp_variadic_templates)
-#error "[error][reflect] __cpp_variadic_templates not supported!"
-#elif !defined(__cpp_fold_expressions)
-#error "[error][reflect] __cpp_fold_expressions not supported!"
-#elif !defined(__cpp_static_assert)
-#error "[error][reflect] __cpp_static_assert not supported!"
-#elif !defined(__cpp_concepts)
-#error "[error][reflect] __cpp_concepts not supported!"
-#elif !defined(__cpp_fold_expressions)
-#error "[error][reflect] __cpp_fold_expressions not supported!"
-#elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect] __cpp_generic_lambdas not supported!"
-#elif !defined(__cpp_nontype_template_args)
-#error "[error][reflect] __cpp_nontype_template_args not supported!"
-#elif !defined(__cpp_nontype_template_parameter_auto)
-#error "[error][reflect] __cpp_nontype_template_parameter_auto not supported!"
-#elif !__has_include(<array>)
-#error "[error][reflect] <array> not found!"
-#elif !__has_include(<string_view>)
-#error "[error][reflect] <string_view> not found!"
-#elif !__has_include(<source_location>)
-#error "[error][reflect] <source_location> not found!"
-#elif !__has_include(<type_traits>)
-#error "[error][reflect] <type_traits> not found!"
-#elif !__has_include(<utility>)
-#error "[error][reflect] <utility> not found!"
-#elif !__has_include(<tuple>)
-#error "[error][reflect] <tuple> not found!"
-#else
 #ifndef REFLECT
 #define REFLECT 1'2'0 // SemVer
 
@@ -60,6 +13,7 @@
 #include <type_traits>
 #include <tuple>
 #include <utility>
+#include <limits>
 
 #if not defined(REFLECT_ENUM_MIN)
 #define REFLECT_ENUM_MIN -1
@@ -243,7 +197,7 @@ template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn
 
 template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
-  #if __cpp_structured_bindings >= 202601L
+  #if (__cpp_structured_bindings >= 202601L)
     auto&& [... ts] = REFLECT_FWD(t);
     return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, ts)...);
   #else
@@ -291,6 +245,10 @@ struct static_vector {
   std::array<T, Size> values_{};
   std::size_t size_{};
 };
+#if defined(__clang__) and (__clang_major__ > 15)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
+#endif
 template<class E, auto N> requires std::is_enum_v<E>
 [[nodiscard]] constexpr auto enum_name() {
   constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
@@ -306,22 +264,18 @@ template<class E, auto N> requires std::is_enum_v<E>
     }();
   }
 }
-#if defined(__clang__) and (__clang_major__ > 15)
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
-#endif
 template<class E, auto Min, auto Max> requires (std::is_enum_v<E> and Max > Min)
 inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
   const auto names = detail::function_name<static_cast<E>(Ns+Min)...>();
   const auto begin = detail::enum_name_info::begin;
-  const auto end = std::size(names)-detail::enum_name_info::end;
+  const auto end = std::size(names) - detail::enum_name_info::end;
   detail::static_vector<std::underlying_type_t<E>, sizeof...(Ns)> cases{};
   std::underlying_type_t<E> index{};
   auto valid = true;
   for (auto i = begin; i < end; ++i) {
     if (names[i] == '(' and names[i+1] != ')') {
       valid = false;
-    } else if (names[i] == ' ' or names[i] == ':') {
+    } else if (names[i] == ' ') {
       valid = true;
     } else if (names[i] == ',' or i == end-1) {
       if (valid) { cases.push_back(index+Min); }
@@ -336,10 +290,12 @@ inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
 #endif
 } // namespace detail
 
-template<class E> requires std::is_enum_v<E> consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
-template<class E> requires std::is_enum_v<E> consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
+template<class E> requires std::is_enum_v<E> consteval auto enum_min(const E) -> int { return REFLECT_ENUM_MIN; }
+template<class E, class T = std::underlying_type_t<E>> requires std::is_enum_v<E> consteval auto enum_max(const E) -> int {
+  return std::numeric_limits<T>::max() < REFLECT_ENUM_MAX ? std::numeric_limits<T>::max() : REFLECT_ENUM_MAX;
+}
 
-template<class E, auto Min = enum_min(E{}), auto Max = enum_max(E{}), auto enum_cases = detail::enum_cases<E, Min, Max>>
+template<class E, int Min = enum_min(E{}), int Max = enum_max(E{}), auto enum_cases = detail::enum_cases<E, Min, Max>>
 inline constexpr auto enumerators = []<auto... Ns>(std::index_sequence<Ns...>) {
   return std::array{std::pair{enum_cases[Ns], detail::enum_name<E, enum_cases[Ns]>()}...};
 }(std::make_index_sequence<enum_cases.size()>{});
@@ -478,10 +434,8 @@ template<class T, fixed_string Name>
 
 template<auto Message>
 struct print { static constexpr auto value = false; };
-
 template<class TMessage>
 concept diagnosis = TMessage::value;
-
 template<class T, auto Name>
 concept member_name_diagnosis = diagnosis<print<diagnose_member_name<T, Name>()>>;
 } // namespace detail
@@ -588,7 +542,7 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
 #undef REFLECT_FWD
 
 #if not defined(NTEST)
-namespace REFLECT_TEST {
+namespace reflect::test {
 struct empty { };
 struct foo { using type = int; enum E { }; };
 template<class T> struct optional {
@@ -603,9 +557,13 @@ enum e {
   _141 = 141,
   _142 = 142,
 };
+enum e1 { e1a };
+enum class e2 : std::uint8_t { e2a, e2b };
+enum e3 { e3a, e3b, e3c, };
+enum class e4 : std::int32_t { e4a, e4b = 77, e4c, e4d = 42, };
 consteval auto enum_min(e) { return e::_141; }
 consteval auto enum_max(e) { return e::_142; }
-} // REFLECT_TEST
+} // reflect::test
 
 static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
   using namespace reflect;
@@ -656,14 +614,14 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   {
     struct empty {};
     struct one { int a; };
-    struct two { int a; REFLECT_TEST::optional<int> o; };
+    struct two { int a; reflect::test::optional<int> o; };
     struct empty_with_base : empty {};
     struct one_with_base : empty { int a; };
-    struct two_with_base : empty { int a; REFLECT_TEST::optional<int> o; };
+    struct two_with_base : empty { int a; reflect::test::optional<int> o; };
     struct base {};
     struct empty_with_bases : empty, base {};
     struct one_with_bases : empty, base { int a; };
-    struct two_with_bases : empty, base { int a; REFLECT_TEST::optional<int> o; };
+    struct two_with_bases : empty, base { int a; reflect::test::optional<int> o; };
     struct two_with_base_member : empty, base { int a; base b; };
 
     static_assert(0 == size<empty>());
@@ -804,27 +762,27 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
     static_assert(std::string_view{"void"} == type_name<void>());
     static_assert(std::string_view{"int"} == type_name<int>());
-    static_assert(std::string_view{"empty"} == type_name<REFLECT_TEST::empty>());
-    static_assert(std::string_view{"empty"} == type_name(REFLECT_TEST::empty{}));
-    static_assert(std::string_view{"foo"} == type_name<REFLECT_TEST::foo>());
-    static_assert(std::string_view{"foo"} == type_name(REFLECT_TEST::foo{}));
-    static_assert(std::string_view{"bar"} == type_name<REFLECT_TEST::bar>());
-    static_assert(std::string_view{"bar"} == type_name(REFLECT_TEST::bar{}));
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<void>>());
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<int>>());
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<REFLECT_TEST::ns::bar_v<42>>>());
-    static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<42>>());
-    static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<>>());
-    static_assert(std::string_view{"int"} == type_name(REFLECT_TEST::foo::type{}));
-    static_assert(std::string_view{"E"} == type_name(REFLECT_TEST::foo::E{}));
+    static_assert(std::string_view{"empty"} == type_name<reflect::test::empty>());
+    static_assert(std::string_view{"empty"} == type_name(reflect::test::empty{}));
+    static_assert(std::string_view{"foo"} == type_name<reflect::test::foo>());
+    static_assert(std::string_view{"foo"} == type_name(reflect::test::foo{}));
+    static_assert(std::string_view{"bar"} == type_name<reflect::test::bar>());
+    static_assert(std::string_view{"bar"} == type_name(reflect::test::bar{}));
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<void>>());
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<int>>());
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<reflect::test::ns::bar_v<42>>>());
+    static_assert(std::string_view{"bar_v"} == type_name<reflect::test::ns::bar_v<42>>());
+    static_assert(std::string_view{"bar_v"} == type_name<reflect::test::ns::bar_v<>>());
+    static_assert(std::string_view{"int"} == type_name(reflect::test::foo::type{}));
+    static_assert(std::string_view{"E"} == type_name(reflect::test::foo::E{}));
     static_assert(std::string_view{"local"} == type_name<local>());
     static_assert(std::string_view{"local"} == type_name(local{}));
   }
 
   // type_id
   {
-    static_assert(type_id<REFLECT_TEST::bar>() != type_id(REFLECT_TEST::foo{}));
-    static_assert(type_id<int>() != type_id(REFLECT_TEST::foo{}));
+    static_assert(type_id<reflect::test::bar>() != type_id(reflect::test::foo{}));
+    static_assert(type_id<int>() != type_id(reflect::test::foo{}));
     static_assert(type_id<int>() != type_id<void>());
     static_assert(type_id<void>() != type_id<int>());
     static_assert(type_id<void>() == type_id<void>());
@@ -833,8 +791,29 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(type_id<const int&>() == type_id<int&>());
     static_assert(type_id<void*>() == type_id<void>());
     static_assert(type_id<void*>() == type_id<void>());
-    static_assert(type_id<REFLECT_TEST::foo>() == type_id(REFLECT_TEST::foo{}));
-    static_assert(type_id<REFLECT_TEST::bar>() == type_id(REFLECT_TEST::bar{}));
+    static_assert(type_id<reflect::test::foo>() == type_id(reflect::test::foo{}));
+    static_assert(type_id<reflect::test::bar>() == type_id(reflect::test::bar{}));
+  }
+
+  // enumerators
+  {
+    static_assert(1u == enumerators<reflect::test::e1>.size());
+    static_assert(std::pair{0u, std::string_view{"e1a"}} == enumerators<reflect::test::e1>[0]);
+
+    static_assert(2u == enumerators<reflect::test::e2>.size());
+    static_assert(std::pair{std::uint8_t(0), std::string_view{"e2a"}} == enumerators<reflect::test::e2>[0]);
+    static_assert(std::pair{std::uint8_t(1), std::string_view{"e2b"}} == enumerators<reflect::test::e2>[1]);
+
+    static_assert(3u == enumerators<reflect::test::e3>.size());
+    static_assert(std::pair{0u, std::string_view{"e3a"}} == enumerators<reflect::test::e3>[0]);
+    static_assert(std::pair{1u, std::string_view{"e3b"}} == enumerators<reflect::test::e3>[1]);
+    static_assert(std::pair{2u, std::string_view{"e3c"}} == enumerators<reflect::test::e3>[2]);
+
+    static_assert(4u == enumerators<reflect::test::e4>.size());
+    static_assert(std::pair{0, std::string_view{"e4a"}} == enumerators<reflect::test::e4>[0]);
+    static_assert(std::pair{42, std::string_view{"e4d"}} == enumerators<reflect::test::e4>[1]);
+    static_assert(std::pair{77, std::string_view{"e4b"}} == enumerators<reflect::test::e4>[2]);
+    static_assert(std::pair{78, std::string_view{"e4c"}} == enumerators<reflect::test::e4>[3]);
   }
 
   // enum_name
@@ -888,8 +867,8 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
       static_assert(std::string_view{"B"} == enum_name<negative,"<>",-1, 1>(negative::B));
       static_assert(std::string_view{"<>"} == enum_name<negative,"<>",-1, 1>(static_cast<negative>(-42)));
 
-      static_assert(std::string_view{"_141"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_141));
-      static_assert(std::string_view{"_142"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_142));
+      static_assert(std::string_view{"_141"} == enum_name<reflect::test::e>(reflect::test::e::_141));
+      static_assert(std::string_view{"_142"} == enum_name<reflect::test::e>(reflect::test::e::_142));
   }
 
   // member_name
@@ -1292,5 +1271,4 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   }
 }(), true));
 #endif
-#endif  // REFLECT
-#endif
+#endif // REFLECT

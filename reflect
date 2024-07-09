@@ -233,6 +233,7 @@ template<class E>
 }
 
 namespace detail {
+template<auto V> consteval const auto& data() { return V.data; }
 template<class T, std::size_t Size>
 struct static_vector {
   constexpr static_vector() = default;
@@ -250,7 +251,6 @@ struct static_vector {
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
-template<auto V> consteval const auto& data() { return V.data; }
 template<class E, auto N> requires std::is_enum_v<E>
 [[nodiscard]] constexpr auto enum_name() {
   constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();

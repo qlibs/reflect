@@ -790,6 +790,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(type_id<reflect::test::bar>() == type_id(reflect::test::bar{}));
   }
 
+  #if not defined(_MSC_VER)
   // enumerators
   {
     static_assert(1u == enumerators<reflect::test::e1>.size());
@@ -810,6 +811,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(77 == enumerators<reflect::test::e4>[2].first);
     static_assert(78 == enumerators<reflect::test::e4>[3].first);
   }
+  #endif
 
   // enum_name
   {

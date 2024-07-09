@@ -1,7 +1,7 @@
 <a href="http://www.boost.org/LICENSE_1_0.txt" target="_blank">![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)</a>
 <a href="https://github.com/boost-ext/reflect/releases" target="_blank">![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)</a>
 <a href="https://godbolt.org/z/zvooxGPP9">![build](https://img.shields.io/badge/build-blue.svg)</a>
-<a href="https://godbolt.org/z/a7643covc">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+<a href="https://godbolt.org/z/794jvrTTq">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
 
 ---------------------------------------
 
@@ -417,7 +417,7 @@ reflect::for_each([&f](const auto I) {
 #define REFLECT 1'2'0           // Current library version (SemVer)
 #define REFLECT_ENUM_MIN -1     // Min size for enum name (can be overridden)
                                 // For example: `-DREFLECT_ENUM_MIN=0`
-#define REFLECT_ENUM_MAX 1024   // Max size for enum name (can be overridden)
+#define REFLECT_ENUM_MAX 128    // Max size for enum name (can be overridden)
                                 // For example: `-DREFLECT_ENUM_MAX=32`
 #define NTEST                   // Disables running static_asserts tests
                                 // Not enabled by default (use with caution)

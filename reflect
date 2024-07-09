@@ -21,7 +21,7 @@
 #endif
 
 #if not defined(REFLECT_ENUM_MAX)
-#define REFLECT_ENUM_MAX 1024
+#define REFLECT_ENUM_MAX 128
 #endif
 
 namespace {

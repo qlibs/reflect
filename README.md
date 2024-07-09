@@ -415,8 +415,8 @@ reflect::for_each([&f](const auto I) {
 
 ```cpp
 #define REFLECT 1'2'1           // Current library version (SemVer)
-#define REFLECT_ENUM_MIN -1     // Min size for enum name (can be overridden)
-                                // For example: `-DREFLECT_ENUM_MIN=0`
+#define REFLECT_ENUM_MIN 0      // Min size for enum name (can be overridden)
+                                // For example: `-DREFLECT_ENUM_MIN=-1`
 #define REFLECT_ENUM_MAX 128    // Max size for enum name (can be overridden)
                                 // For example: `-DREFLECT_ENUM_MAX=32`
 #define NTEST                   // Disables running static_asserts tests
@@ -429,7 +429,7 @@ reflect::for_each([&f](const auto I) {
 - How does `reflect` compare to https://wg21.link/P2996?
 
     > `reflect` library only provides basic reflection primitives, mostly via hacks and workarounds to deal with lack of the reflection.
-    https://wg21.link/P2996 is a language proposal with many more features and capabilities. It's like comparing a drop in the ocean to the entire sea!
+    https://wg21.link/P2996 is a language proposal with many more features and capabilities.
 
 - How does `reflect` work under the hood?
 
@@ -452,7 +452,7 @@ reflect::for_each([&f](const auto I) {
 
 - Can I disable running tests at compile-time for faster compilation times?
 
-    > When `NTEST` is defined static_asserts tests won't be executed upon inclusion.
+    > When `-DNTEST` is defined static_asserts tests won't be executed upon inclusion.
     Note: Use with caution as disabling tests means that there are no guarantees upon inclusion that the given compiler/env combination works as expected.
 
 - How to extend the number of members to be reflected (default: 64)?
@@ -486,7 +486,3 @@ reflect::for_each([&f](const auto I) {
 
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
-
----
-
-**Disclaimer** `reflect` is not an official Boost library.

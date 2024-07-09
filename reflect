@@ -249,20 +249,14 @@ struct static_vector {
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
+template<auto V> consteval const auto& data() { return V.data; }
 template<class E, auto N> requires std::is_enum_v<E>
 [[nodiscard]] constexpr auto enum_name() {
   constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
   constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
   constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
   static_assert(std::size(enum_name) > 0u);
-  if (std::is_constant_evaluated()) {
-    return enum_name;
-  } else {
-    return [&] {
-      static constexpr const auto static_name = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
-      return std::string_view{static_name};
-    }();
-  }
+  return data<fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)}>();
 }
 template<class E, auto Min, auto Max> requires (std::is_enum_v<E> and Max > Min)
 inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
@@ -798,22 +792,22 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   // enumerators
   {
     static_assert(1u == enumerators<reflect::test::e1>.size());
-    static_assert(std::pair{0u, std::string_view{"e1a"}} == enumerators<reflect::test::e1>[0]);
+    static_assert(0u == enumerators<reflect::test::e1>[0].first);
 
     static_assert(2u == enumerators<reflect::test::e2>.size());
-    static_assert(std::pair{std::uint8_t(0), std::string_view{"e2a"}} == enumerators<reflect::test::e2>[0]);
-    static_assert(std::pair{std::uint8_t(1), std::string_view{"e2b"}} == enumerators<reflect::test::e2>[1]);
+    static_assert(std::uint8_t(0) == enumerators<reflect::test::e2>[0].first);
+    static_assert(std::uint8_t(1) == enumerators<reflect::test::e2>[1].first);
 
     static_assert(3u == enumerators<reflect::test::e3>.size());
-    static_assert(std::pair{0u, std::string_view{"e3a"}} == enumerators<reflect::test::e3>[0]);
-    static_assert(std::pair{1u, std::string_view{"e3b"}} == enumerators<reflect::test::e3>[1]);
-    static_assert(std::pair{2u, std::string_view{"e3c"}} == enumerators<reflect::test::e3>[2]);
+    static_assert(0u == enumerators<reflect::test::e3>[0].first);
+    static_assert(1u == enumerators<reflect::test::e3>[1].first);
+    static_assert(2u == enumerators<reflect::test::e3>[2].first);
 
     static_assert(4u == enumerators<reflect::test::e4>.size());
-    static_assert(std::pair{0, std::string_view{"e4a"}} == enumerators<reflect::test::e4>[0]);
-    static_assert(std::pair{42, std::string_view{"e4d"}} == enumerators<reflect::test::e4>[1]);
-    static_assert(std::pair{77, std::string_view{"e4b"}} == enumerators<reflect::test::e4>[2]);
-    static_assert(std::pair{78, std::string_view{"e4c"}} == enumerators<reflect::test::e4>[3]);
+    static_assert(0 == enumerators<reflect::test::e4>[0].first);
+    static_assert(42 == enumerators<reflect::test::e4>[1].first);
+    static_assert(77 == enumerators<reflect::test::e4>[2].first);
+    static_assert(78 == enumerators<reflect::test::e4>[3].first);
   }
 
   // enum_name

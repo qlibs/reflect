@@ -89,7 +89,7 @@ int main() {
 ### Examples
 
 - [feature] Opt-in mixins - https://godbolt.org/z/sj7fYKoc3
-- [feature] Meta-programming (https://github.com/boost-ext/mp) - https://godbolt.org/z/s7ce6bh5d
+- [feature] Meta-programming (https://github.com/boost-ext/mp) - https://godbolt.org/z/ds3KMGhqP
 - [future] Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
 - [performance] Minimal-Perfect-Hashing based `enum_name` (https://github.com/boost-ext/mph) - https://godbolt.org/z/WM155vTfv
 

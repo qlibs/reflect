@@ -351,6 +351,9 @@ template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(REFLECT_FWD(args)...); }, REFLECT_FWD(t));
 }
 
+template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())
+using member_type = std::remove_cvref_t<decltype(reflect::get<N>(std::declval<T&&>()))>;
+
 namespace detail {
 template<class T, auto Name>
 inline constexpr bool has_member_name_impl = []<auto... Ns>(std::index_sequence<Ns...>) {
@@ -917,6 +920,15 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
         static_assert(std::is_same_v<decltype(get<0>(foo{})), int&&>);
       }
     }
+  }
+
+  // member_type
+  {
+    struct foo{ int i; float j; bool k; };
+
+    static_assert(std::is_same_v<int, member_type<0, foo>>);
+    static_assert(std::is_same_v<float, member_type<1, foo>>);
+    static_assert(std::is_same_v<bool, member_type<2, foo>>);
   }
 
   // has_member_name

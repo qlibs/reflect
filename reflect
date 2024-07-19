@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifdef DOC
+#ifdef README
 // -->
 [![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)](http://www.boost.org/LICENSE_1_0.txt)
 [![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)](https://github.com/boost-ext/reflect/releases)
@@ -497,8 +497,7 @@ reflect::for_each([&f](const auto I) {
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
 <!--
-#endif // DOC
-
+#else
 #ifndef REFLECT
 #define REFLECT 1'2'1 // SemVer
 
@@ -511,11 +510,11 @@ reflect::for_each([&f](const auto I) {
 #include <limits>
 #include <cstdint>
 
-#if not defined(REFLECT_ENUM_MIN)
+#ifndef REFLECT_ENUM_MIN
 #define REFLECT_ENUM_MIN 0
 #endif
 
-#if not defined(REFLECT_ENUM_MAX)
+#ifndef REFLECT_ENUM_MAX
 #define REFLECT_ENUM_MAX 128
 #endif
 
@@ -1283,7 +1282,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(type_id<reflect::test::bar>() == type_id(reflect::test::bar{}));
   }
 
-  #if not defined(_MSC_VER)
+  #ifndef _MSC_VER
   // enumerators
   {
     static_assert(1u == enumerators<reflect::test::e1>.size());
@@ -1771,3 +1770,4 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 }(), true));
 #endif // NTEST
 #endif // REFLECT
+#endif // README

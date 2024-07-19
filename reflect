@@ -11,7 +11,7 @@
 [![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)](http://www.boost.org/LICENSE_1_0.txt)
 [![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)](https://github.com/boost-ext/reflect/releases)
 [![build](https://img.shields.io/badge/build-blue.svg)](https://godbolt.org/z/zvooxGPP9)
-[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/794jvrTTq)
+[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/oYhh1hfeo)
 
 ---------------------------------------
 
@@ -38,7 +38,7 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/EW1evKeW4)
+### Hello world (https://godbolt.org/z/oYhh1hfeo)
 
 ```cpp
 #include <reflect>

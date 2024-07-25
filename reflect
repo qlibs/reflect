@@ -549,7 +549,7 @@ template<std::size_t N, class...Ts> requires (N < sizeof...(Ts))
 template<auto...  Vs> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 template<class... Ts> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
-template<class>
+template<class T>
 struct type_name_info {
   static constexpr auto name = function_name<void>();
   static constexpr auto begin = name.find("void");

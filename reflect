@@ -21,8 +21,7 @@
 
 ### Features
 
-- Single header (https://raw.githubusercontent.com/qlibs/reflect/main/reflect)
-    - Easy integration (see [FAQ](#faq))
+- Single header (https://raw.githubusercontent.com/qlibs/reflect/main/reflect - for integration see FAQ)
 - Minimal [API](#api)
 - Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
     - Basically guarantees no UB, no memory leaks*

@@ -9,7 +9,7 @@
 #ifdef README
 // -->
 [![Boost Licence](http://img.shields.io/badge/license-boost-blue.svg)](http://www.boost.org/LICENSE_1_0.txt)
-[![Version](https://badge.fury.io/gh/boost-ext%2Freflect.svg)](https://github.com/boost-ext/reflect/releases)
+[![Version](https://badge.fury.io/gh/qlibs%2Freflect.svg)](https://github.com/qlibs/reflect/releases)
 [![build](https://img.shields.io/badge/build-blue.svg)](https://godbolt.org/z/zvooxGPP9)
 [![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/oYhh1hfeo)
 
@@ -21,7 +21,7 @@
 
 ### Features
 
-- Single header (https://raw.githubusercontent.com/boost-ext/reflect/main/reflect)
+- Single header (https://raw.githubusercontent.com/qlibs/reflect/main/reflect)
     - Easy integration (see [FAQ](#faq))
 - Minimal [API](#api)
 - Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
@@ -99,9 +99,9 @@ int main() {
 ### Examples
 
 - [feature] Opt-in mixins - https://godbolt.org/z/sj7fYKoc3
-- [feature] Meta-programming (https://github.com/boost-ext/mp) - https://godbolt.org/z/ds3KMGhqP
+- [feature] Meta-programming (https://github.com/qlibs/mp) - https://godbolt.org/z/ds3KMGhqP
 - [future] Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
-- [performance] Minimal-Perfect-Hashing based `enum_name` (https://github.com/boost-ext/mph) - https://godbolt.org/z/WM155vTfv
+- [performance] Minimal-Perfect-Hashing based `enum_name` (https://github.com/qlibs/mph) - https://godbolt.org/z/WM155vTfv
 
 ---
 
@@ -168,7 +168,7 @@ enum_name<1ul>:
 <a name="comp"></a>
 ### Compilation times
 
-> [include] https://raw.githubusercontent.com/boost-ext/reflect/main/reflect
+> [include] https://raw.githubusercontent.com/qlibs/reflect/main/reflect
 
 ```cpp
 time g++-13.2 -x c++ -std=c++20 reflect -c -DNTEST   # 0.113s
@@ -482,7 +482,7 @@ reflect::for_each([&f](const auto I) {
     ```
     CPMAddPackage(
       Name reflect
-      GITHUB_REPOSITORY boost-ext/reflect
+      GITHUB_REPOSITORY qlibs/reflect
       GIT_TAG v1.2.2
     )
     add_library(reflect INTERFACE)

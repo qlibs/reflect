@@ -1051,7 +1051,9 @@ consteval auto enum_min(e) { return e::_141; }
 consteval auto enum_max(e) { return e::_142; }
 } // reflect::test
 
-static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
+static_assert(([] {
+  constexpr auto expect = [](bool cond) { if (not cond) { void failed(); failed(); } };
+
   using namespace reflect;
 
   // nth_pack_element

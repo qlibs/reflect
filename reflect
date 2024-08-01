@@ -591,17 +591,17 @@ struct fixed_string {
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
   [[nodiscard]] constexpr explicit(false) operator std::string_view() const { return {std::data(data), Size}; }
   [[nodiscard]] constexpr auto size() const { return Size; }
-  T data[Size+1];
+  T data[Size + 1u];
 };
 template<class T, std::size_t Capacity, std::size_t Size = Capacity-1> fixed_string(const T (&str)[Capacity]) -> fixed_string<T, Size>;
 
 namespace detail {
-template<class T, std::size_t Bases = 0, class... Ts> requires std::is_aggregate_v<T>
+template<class T, std::size_t Bases = 0u, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
     return sizeof...(Ts) - Bases;
   } else if constexpr (Bases == sizeof...(Ts) and requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any_except_base_of<T>{}}; }) {
-    return size<T, Bases + 1, Ts..., detail::any>();
+    return size<T, Bases + 1u, Ts..., detail::any>();
   } else {
     return size<T, Bases, Ts..., detail::any>();
   }
@@ -791,12 +791,12 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
   if constexpr (constexpr auto cases = enumerators<E, Min, Max>; std::empty(cases)) {
     return unknown;
   } else {
-    const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
+    const auto switch_case = [&]<std::size_t I = 0u>(auto switch_case, const auto value) -> std::string_view {
       if constexpr (I == std::size(cases)) {
         return unknown;
       } else {
         switch (value) {
-          default:             return switch_case.template operator()<I+1>(switch_case, value);
+          default:             return switch_case.template operator()<I + 1u>(switch_case, value);
           case cases[I].first: return cases[I].second;
         }
       }

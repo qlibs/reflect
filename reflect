@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#ifdef README
+#if 0
 // -->
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://badge.fury.io/gh/qlibs%2Freflect.svg)](https://github.com/qlibs/reflect/releases)
@@ -511,9 +511,9 @@ reflect::for_each([&f](const auto I) {
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
 <!--
-#else
-#ifndef REFLECT
-#define REFLECT 1'2'2 // SemVer
+#endif
+
+#pragma once
 
 #include <array>
 #include <string_view>
@@ -1785,5 +1785,3 @@ static_assert(([] {
   }
 }(), true));
 #endif // NTEST
-#endif // REFLECT
-#endif // README

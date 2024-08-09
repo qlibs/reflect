@@ -25,7 +25,7 @@
 // -->
 [Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
 
-## reflect: C++20 Static Reflection library
+## REFLECT: C++20 Static Reflection library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://badge.fury.io/gh/qlibs%2Freflect.svg)](https://github.com/qlibs/reflect/releases)

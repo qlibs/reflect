@@ -23,16 +23,16 @@
 //
 #if 0
 // -->
+[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
+
+## reflect: C++20 Static Reflection library
+
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://badge.fury.io/gh/qlibs%2Freflect.svg)](https://github.com/qlibs/reflect/releases)
 [![build](https://img.shields.io/badge/build-blue.svg)](https://godbolt.org/z/zvooxGPP9)
 [![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/oYhh1hfeo)
 
----------------------------------------
-
-## reflect: C++20 Static Reflection library
-
-> https://en.wikipedia.org/wiki/Reflective_programming
+  > https://en.wikipedia.org/wiki/Reflective_programming
 
 ### Features
 
@@ -52,7 +52,9 @@
 
 ---
 
-### Hello world (https://godbolt.org/z/oYhh1hfeo)
+### Overview
+
+> Hello world (https://godbolt.org/z/oYhh1hfeo)
 
 ```cpp
 #include <reflect>

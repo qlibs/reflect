@@ -420,7 +420,7 @@ static_assert(4 == offset_of<1, foo>());
 ```
 
 ```cpp
-template<class Fn, class T>
+template<class T, class Fn>
   requires std::is_aggregate_v<std::remove_cvref_t<T>>
 constexpr auto for_each(Fn&& fn) -> void;
 

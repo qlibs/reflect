@@ -48,7 +48,6 @@
 ### Requirements
 
 - C++20 ([gcc-12+, clang-15+, msvc-19.36+](https://godbolt.org/z/xPc19Moef))
-    - STL headers (array, string_view, source_location, type_traits, utility, [tuple])
 
 ---
 

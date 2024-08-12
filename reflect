@@ -121,7 +121,9 @@ int main() {
 ---
 
 <a name="perf"></a>
-### Performance/Binary size (https://godbolt.org/z/7TbobjWfj)
+### Performance
+
+> Binary size (https://godbolt.org/z/7TbobjWfj)
 
 ```cpp
 struct foo { int bar; };

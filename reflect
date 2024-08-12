@@ -500,11 +500,11 @@ reflect::for_each([&f](const auto I) {
     )
     add_library(reflect INTERFACE)
     target_include_directories(reflect SYSTEM INTERFACE ${reflect_SOURCE_DIR})
-    add_library(reflect::reflect ALIAS reflect)
+    add_library(qlibs::reflect ALIAS reflect)
     ```
 
     ```
-    target_link_libraries(${PROJECT_NAME} reflect::reflect);
+    target_link_libraries(${PROJECT_NAME} qlibs::reflect);
     ```
 
 - Similar projects?

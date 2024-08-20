@@ -28,8 +28,8 @@
 ## REFLECT: C++20 Static Reflection library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
-[![Version](https://badge.fury.io/gh/qlibs%2Freflect.svg)](https://github.com/qlibs/reflect/releases)
-[![build](https://img.shields.io/badge/build-blue.svg)](https://godbolt.org/z/zvooxGPP9)
+[![Version](https://img.shields.io/github/v/release/qlibs/reflect)](https://github.com/qlibs/reflect/releases)
+[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/zvooxGPP9)
 [![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/oYhh1hfeo)
 
   > https://en.wikipedia.org/wiki/Reflective_programming

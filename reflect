@@ -1080,7 +1080,7 @@ enum e {
 enum e1 { e1a };
 enum class e2 : std::uint8_t { e2a, e2b };
 enum e3 { e3a, e3b, e3c, };
-enum class e4 : std::int32_t { e4a, e4b = 77, e4c, e4d = 42, };
+enum class e4 : std::int32_t { e4a, e4b = 5, e4c, e4d = 2, };
 consteval auto enum_min(e) { return e::_141; }
 consteval auto enum_max(e) { return e::_142; }
 void failed(); auto expect = [](bool cond) { if (not cond) { failed(); } };
@@ -1320,23 +1320,23 @@ static_assert(([] {
   #ifndef _MSC_VER
   // enumerators
   {
-    static_assert(1u == enumerators<reflect::test::e1>.size());
-    static_assert(0u == enumerators<reflect::test::e1>[0].first);
+    static_assert(1u == enumerators<reflect::test::e1, 0, 1>.size());
+    static_assert(0u == enumerators<reflect::test::e1, 0, 1>[0].first);
 
-    static_assert(2u == enumerators<reflect::test::e2>.size());
-    static_assert(std::uint8_t(0) == enumerators<reflect::test::e2>[0].first);
-    static_assert(std::uint8_t(1) == enumerators<reflect::test::e2>[1].first);
+    static_assert(2u == enumerators<reflect::test::e2, 0, 2>.size());
+    static_assert(std::uint8_t(0) == enumerators<reflect::test::e2, 0, 2>[0].first);
+    static_assert(std::uint8_t(1) == enumerators<reflect::test::e2, 0, 2>[1].first);
 
-    static_assert(3u == enumerators<reflect::test::e3>.size());
-    static_assert(0u == enumerators<reflect::test::e3>[0].first);
-    static_assert(1u == enumerators<reflect::test::e3>[1].first);
-    static_assert(2u == enumerators<reflect::test::e3>[2].first);
+    static_assert(3u == enumerators<reflect::test::e3, 0, 3>.size());
+    static_assert(0u == enumerators<reflect::test::e3, 0, 3>[0].first);
+    static_assert(1u == enumerators<reflect::test::e3, 0, 3>[1].first);
+    static_assert(2u == enumerators<reflect::test::e3, 0, 3>[2].first);
 
-    static_assert(4u == enumerators<reflect::test::e4>.size());
-    static_assert(0 == enumerators<reflect::test::e4>[0].first);
-    static_assert(42 == enumerators<reflect::test::e4>[1].first);
-    static_assert(77 == enumerators<reflect::test::e4>[2].first);
-    static_assert(78 == enumerators<reflect::test::e4>[3].first);
+    static_assert(4u == enumerators<reflect::test::e4, 0, 6>.size());
+    static_assert(0 == enumerators<reflect::test::e4, 0, 6>[0].first);
+    static_assert(2 == enumerators<reflect::test::e4, 0, 6>[1].first);
+    static_assert(5 == enumerators<reflect::test::e4, 0, 6>[2].first);
+    static_assert(6 == enumerators<reflect::test::e4, 0, 6>[3].first);
   }
   #endif
 

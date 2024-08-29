@@ -176,10 +176,10 @@ enum_name(E): // $CXX -O3 -DNDEBUG (generates switch)
   ret
 
 enum_name<0ul>:
-        .ascii  "A"
+  .ascii  "A"
 
 enum_name<1ul>:
-        .ascii  "B"
+  .ascii  "B"
 ```
 
 <a name="comp"></a>

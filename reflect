@@ -132,12 +132,12 @@ auto type_name(const foo& f) { return reflect::type_name(f); }
 
 ```asm
 type_name(foo const&): // $CXX -O3 -DNDEBUG
-        lea     rdx, [rip + type_name<foo>]
-        mov     eax, 3
-        ret
+  lea rdx, [rip + type_name<foo>]
+  mov eax, 3
+  ret
 
 type_name<foo>
-        .ascii  "foo"
+  .ascii  "foo"
 ```
 
 ```cpp
@@ -147,12 +147,12 @@ auto member_name(const foo& f) { return reflect::member_name<0>(f); }
 
 ```asm
 member_name(foo const&): // $CXX -O3 -DNDEBUG
-        lea     rdx, [rip + member_name<0ul, foo>]
-        mov     eax, 3
-        ret
+  lea rdx, [rip + member_name<0ul, foo>]
+  mov eax, 3
+  ret
 
 member_name<0ul, foo>
-        .ascii  "bar"
+  .ascii  "bar"
 ```
 
 ```cpp
@@ -162,18 +162,18 @@ auto enum_name(const E e) { return reflect::enum_name(e); }
 
 ```asm
 enum_name(E): // $CXX -O3 -DNDEBUG (generates switch)
-        xor     eax, eax
-        xor     ecx, ecx
-        cmp     edi, 1
-        sete    cl
-        lea     rdx, [rip + enum_name<0>]
-        cmove   rax, rdx
-        test    edi, edi
-        lea     rdx, [rip + enum_name<1>]
-        cmovne  rdx, rax
-        mov     eax, 1
-        cmovne  rax, rcx
-        ret
+  xor     eax, eax
+  xor     ecx, ecx
+  cmp     edi, 1
+  sete    cl
+  lea     rdx, [rip + enum_name<0>]
+  cmove   rax, rdx
+  test    edi, edi
+  lea     rdx, [rip + enum_name<1>]
+  cmovne  rdx, rax
+  mov     eax, 1
+  cmovne  rax, rcx
+  ret
 
 enum_name<0ul>:
         .ascii  "A"

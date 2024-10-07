@@ -1083,7 +1083,8 @@ enum e3 { e3a, e3b, e3c, };
 enum class e4 : std::int32_t { e4a, e4b = 5, e4c, e4d = 2, };
 consteval auto enum_min(e) { return e::_141; }
 consteval auto enum_max(e) { return e::_142; }
-void failed(); auto expect = [](bool cond) { if (not cond) { failed(); } };
+void failed(); 
+inline constexpr auto expect = [](bool cond) { if (not cond) { failed(); } };
 } // reflect::test
 
 static_assert(([] {

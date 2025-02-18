@@ -839,6 +839,17 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
   }
 }
 
+/**
+ * @code
+ * static_assert(type_id_v<void> == type_id_v<void>);
+ * static_assert(type_id_v<int>  != type_id_v<void>);
+ * static_assert(type_id_v<int>  == type_id_v<int>);
+ * static_assert(type_id_v<int>  != type_id_v<const int&>);
+ * @endcode
+ */
+template<class...>
+static constexpr auto type_id_v = +[]{};
+
 template<class T>
 [[nodiscard]] constexpr auto type_id() -> std::size_t {
   std::size_t result{};
@@ -1316,6 +1327,14 @@ static_assert(([] {
     static_assert(type_id<void*>() == type_id<void>());
     static_assert(type_id<reflect::test::foo>() == type_id(reflect::test::foo{}));
     static_assert(type_id<reflect::test::bar>() == type_id(reflect::test::bar{}));
+  }
+
+  // type_id_v
+  {
+    static_assert(type_id_v<void> == type_id_v<void>);
+    static_assert(type_id_v<int>  != type_id_v<void>);
+    static_assert(type_id_v<int>  == type_id_v<int>);
+    static_assert(type_id_v<int>  != type_id_v<const int&>);
   }
 
   #ifndef _MSC_VER

@@ -525,7 +525,7 @@ template<> struct REFLECT_FWD_LIKE<true> { template<class T> using type = std::r
 #define REFLECT_FWD_LIKE(T, ...) static_cast<typename ::REFLECT_FWD_LIKE<::std::is_lvalue_reference_v<T>>::template type<decltype(__VA_ARGS__)>>(__VA_ARGS__)
 struct  REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
-namespace reflect::inline v1_2_4 {
+namespace reflect::inline v1_2_5 {
 namespace detail {
 template<class T> extern const T ext{};
 struct any { template<class T> operator T() const noexcept; };

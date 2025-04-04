@@ -492,23 +492,6 @@ reflect::for_each([&f](const auto I) {
     }
     ```
 
-- How to integrate with [CMake.FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)?
-
-    ```
-    include(FetchContent)
-
-    FetchContent_Declare(
-      qlibs.reflect
-      GIT_REPOSITORY https://github.com/qlibs/reflect
-      GIT_TAG v1.2.4
-    )
-
-    FetchContent_MakeAvailable(qlibs.reflect)
-    ```
-
-    ```
-    target_link_libraries(${PROJECT_NAME} PUBLIC qlibs.reflect);
-    ```
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
 <!--

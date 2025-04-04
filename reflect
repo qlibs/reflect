@@ -831,7 +831,7 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
  * @endcode
  */
 template<class...>
-static constexpr auto type_id_v = +[]{};
+inline constexpr auto type_id_v = []{};
 
 template<class T>
 [[nodiscard]] constexpr auto type_id() -> std::size_t {

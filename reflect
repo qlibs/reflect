@@ -23,7 +23,7 @@
 //
 #if 0
 // -->
-[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
+[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ) / [Resources](#Resources)
 
 ## REFLECT: C++20 Static Reflection library
 
@@ -48,8 +48,6 @@
 ### Requirements
 
 - C++20 ([gcc-12+, clang-15+, msvc-19.36+](https://godbolt.org/z/xPc19Moef))
-
----
 
 ### Overview
 
@@ -96,20 +94,18 @@ static_assert(B  == std::get<1>(t));
 int main() {
   reflect::for_each([](auto I) {
     std::print("{}.{}:{}={} ({}/{}/{})\n",
-        reflect::type_name(f),                  // foo, foo
-        reflect::member_name<I>(f),             // a  , b
-        reflect::type_name(reflect::get<I>(f)), // int, E
-        reflect::get<I>(f),                     // 42 , B
-        reflect::size_of<I>(f),                 // 4  , 4
-        reflect::align_of<I>(f),                // 4  , 4
-        reflect::offset_of<I>(f));              // 0  , 4
+      reflect::type_name(f),                  // foo, foo
+      reflect::member_name<I>(f),             // a  , b
+      reflect::type_name(reflect::get<I>(f)), // int, E
+      reflect::get<I>(f),                     // 42 , B
+      reflect::size_of<I>(f),                 // 4  , 4
+      reflect::align_of<I>(f),                // 4  , 4
+      reflect::offset_of<I>(f));              // 0  , 4
   }, f);
 }
 
 // and more (see API)...
 ```
-
----
 
 ### Examples
 
@@ -117,8 +113,6 @@ int main() {
 - [feature] Meta-programming (https://github.com/qlibs/mp) - https://godbolt.org/z/ds3KMGhqP
 - [future] Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
 - [performance] Minimal Perfect Hashing based `enum_name` (https://github.com/qlibs/mph) - https://godbolt.org/z/WM155vTfv
-
----
 
 <a name="perf"></a>
 ### Performance
@@ -196,8 +190,6 @@ time g++-13.2 -x c++ -std=c++20 reflect -c           # 0.253s
 time clang++-17 -x c++ -std=c++20 reflect -c -DNTEST # 0.119s
 time clang++-17 -x c++ -std=c++20 reflect -c         # 0.322s
 ```
-
----
 
 ### API
 
@@ -447,8 +439,6 @@ reflect::for_each([&f](const auto I) {
                                 // For example: `-DREFLECT_ENUM_MAX=32`
 ```
 
----
-
 ### FAQ
 
 - How does `reflect` compare to https://wg21.link/P2996?
@@ -494,6 +484,16 @@ reflect::for_each([&f](const auto I) {
 
 - Similar projects?
     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
+
+### Resources
+
+> - https://wg21.link/P2996 (Reflection for C++26)
+> - https://wg21.link/P0385 (Static Reflection)
+
+### License
+
+> - [MIT](LICENSE)
+
 <!--
 #endif
 

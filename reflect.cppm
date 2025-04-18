@@ -47,3 +47,6 @@ export namespace reflect {
     using reflect::offset_of;
     using reflect::for_each;
 } // namespace reflect
+
+// -*- mode: c++; -*-
+// vim: set filetype=cpp:

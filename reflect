@@ -443,47 +443,47 @@ reflect::for_each([&f](const auto I) {
 
 > - How does `reflect` compare to https://wg21.link/P2996?
 >
->     > `reflect` library only provides basic reflection primitives, mostly via hacks and workarounds to deal with lack of the reflection.
->     https://wg21.link/P2996 is a language proposal with many more features and capabilities.
+>   `reflect` library only provides basic reflection primitives, mostly via hacks and workarounds to deal with lack of the reflection.
+>   https://wg21.link/P2996 is a language proposal with many more features and capabilities.
 >
 > - How does `reflect` work under the hood?
 >
->     > There are many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
+>   There are many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
 >
 > - How can `reflect` be agnostic to compiler changes?
 >
->     > `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
->     Any compiler change will end up with new prefixes/postfixes and wont require additional maintenance.
+>   `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
+>   Any compiler change will end up with new prefixes/postfixes and wont require additional maintenance.
 >
 > - What does it mean that `reflect` tests itself upon include?
 >
->     > `reflect` runs all tests (via static_asserts) upon include. If the include compiles it means all tests are passing and the library works correctly on given compiler, environment.
+>   `reflect` runs all tests (via static_asserts) upon include. If the include compiles it means all tests are passing and the library works correctly on given compiler, environment.
 >
 > - What is compile-time overhead of `reflect` library?
 >
->     > `reflect` include takes ~.2s (that includes running all tests).
->     The most expensive calls are `visit` and `enum_to_name` whose timing will depend on the number of reflected elements and/or min/max values provided.
->     There are no recursive template instantiations in the library.
+>   `reflect` include takes ~.2s (that includes running all tests).
+>   The most expensive calls are `visit` and `enum_to_name` whose timing will depend on the number of reflected elements and/or min/max values provided.
+>   There are no recursive template instantiations in the library.
 >
 > - Can I disable running tests at compile-time for faster compilation times?
 >
->     > When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
->     Note: Use with caution as disabling tests means that there are no guarantees upon inclusion that the given compiler/env combination works as expected.
+>   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+>   Note: Use with caution as disabling tests means that there are no guarantees upon inclusion that the given compiler/env combination works as expected.
 >
 > - How to extend the number of members to be reflected (default: 64)?
 >
->     > Override `visit`, for example - https://godbolt.org/z/Ga3bc3KKW
+>   Override `visit`, for example - https://godbolt.org/z/Ga3bc3KKW
 >
->     ```cpp
->     template <class Fn, class T> // requires https://wg21.link/P1061
->     [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
->       auto&& [... ts] = std::forward<T>(t);
->       return std::forward<Fn>(fn)(std::forward_like<T>(ts)...);
->     }
->     ```
+>   ```cpp
+>   template <class Fn, class T> // requires https://wg21.link/P1061
+>   [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
+>     auto&& [... ts] = std::forward<T>(t);
+>     return std::forward<Fn>(fn)(std::forward_like<T>(ts)...);
+>   }
+>   ```
 >
 > - Similar projects?
->     > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
+>   [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
 
 ### Resources
 

@@ -1,77 +1,519 @@
+// <!--
+// The MIT License (MIT)
 //
-// Copyright (c) 2024 Kris Jusiak (kris at jusiak dot net)
+// Copyright (c) 2024 Kris Jusiak <kris@jusiak.net>
 //
-// Distributed under the Boost Software License, Version 1.0.
-// (See accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
-#if !defined(__cpp_rvalue_references)
-#error "[error][reflect] __cpp_rvalue_references not supported!"
-#elif !defined(__cpp_decltype)
-#error "[error][reflect] __cpp_decltype not supported!"
-#elif !defined(__cpp_decltype_auto)
-#error "[error][reflect] __cpp_decltype_auto not supported!"
-#elif !defined(__cpp_return_type_deduction)
-#error "[error][reflect] __cpp_return_type_deduction not supported!"
-#elif !defined(__cpp_deduction_guides)
-#error "[error][reflect] __cpp_deduction_guides not supported!"
-#elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect] __cpp_generic_lambdas not supported!"
-#elif !defined(__cpp_constexpr)
-#error "[error][reflect] __cpp_constexpr not supported!"
-#elif !defined(__cpp_if_constexpr)
-#error "[error][reflect] __cpp_if_constexpr not supported!"
-#elif !defined(__cpp_alias_templates)
-#error "[error][reflect] __cpp_alias_templates not supported!"
-#elif !defined(__cpp_variadic_templates)
-#error "[error][reflect] __cpp_variadic_templates not supported!"
-#elif !defined(__cpp_fold_expressions)
-#error "[error][reflect] __cpp_fold_expressions not supported!"
-#elif !defined(__cpp_static_assert)
-#error "[error][reflect] __cpp_static_assert not supported!"
-#elif !defined(__cpp_concepts)
-#error "[error][reflect] __cpp_concepts not supported!"
-#elif !defined(__cpp_fold_expressions)
-#error "[error][reflect] __cpp_fold_expressions not supported!"
-#elif !defined(__cpp_generic_lambdas)
-#error "[error][reflect] __cpp_generic_lambdas not supported!"
-#elif !defined(__cpp_nontype_template_args)
-#error "[error][reflect] __cpp_nontype_template_args not supported!"
-#elif !defined(__cpp_nontype_template_parameter_auto)
-#error "[error][reflect] __cpp_nontype_template_parameter_auto not supported!"
-#elif !__has_include(<array>)
-#error "[error][reflect] <array> not found!"
-#elif !__has_include(<string_view>)
-#error "[error][reflect] <string_view> not found!"
-#elif !__has_include(<source_location>)
-#error "[error][reflect] <source_location> not found!"
-#elif !__has_include(<type_traits>)
-#error "[error][reflect] <type_traits> not found!"
-#elif !__has_include(<utility>)
-#error "[error][reflect] <utility> not found!"
-#elif !__has_include(<tuple>)
-#error "[error][reflect] <tuple> not found!"
-#else
-#ifndef REFLECT
-#define REFLECT 1'1'1 // SemVer
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+#if 0
+// -->
+[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
 
-#if REFLECT_USE_STD_MODULE == 1
-import std;
-#else
+## REFLECT: C++20 Static Reflection library
+
+[![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
+[![Version](https://img.shields.io/github/v/release/qlibs/reflect)](https://github.com/qlibs/reflect/releases)
+[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/zvooxGPP9)
+[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/oYhh1hfeo)
+
+  > https://en.wikipedia.org/wiki/Reflective_programming
+
+### Features
+
+- Single header (https://raw.githubusercontent.com/qlibs/reflect/main/reflect)
+- Minimal [API](#api)
+- Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
+    - Basically guarantees no UB, no memory leaks*
+- Compiles cleanly with ([`-fno-exceptions -fno-rtti -Wall -Wextra -Werror -pedantic -pedantic-errors | /W4 /WX`](https://godbolt.org/z/M747ocGfx))
+- Agnostic to compiler changes (no ifdefs for the compiler specific implementations - see [FAQ](#faq))
+- Optimized run-time execution and binary size (see [performance](#perf))
+- Fast compilation times (see [compilation times](#comp))
+
+### Requirements
+
+- C++20 ([gcc-12+, clang-15+, msvc-19.36+](https://godbolt.org/z/xPc19Moef))
+
+---
+
+### Overview
+
+> Hello world (https://godbolt.org/z/oYhh1hfeo)
+
+```cpp
+#include <reflect>
+
+enum E { A, B };
+struct foo { int a; E b; };
+
+constexpr auto f = foo{.a = 42, .b = B};
+
+// reflect::size
+static_assert(2 == reflect::size(f));
+
+// reflect::type_id
+static_assert(reflect::type_id(f.a) != reflect::type_id(f.b));
+
+// reflect::type_name
+static_assert("foo"sv == reflect::type_name(f));
+static_assert("int"sv == reflect::type_name(f.a));
+static_assert("E"sv   == reflect::type_name(f.b));
+
+// reflect::enum_name
+static_assert("B"sv == reflect::enum_name(f.b));
+
+// reflect::member_name
+static_assert("a"sv == reflect::member_name<0>(f));
+static_assert("b"sv == reflect::member_name<1>(f));
+
+// reflect::get
+static_assert(42 == reflect::get<0>(f)); // by index
+static_assert(B  == reflect::get<1>(f));
+
+static_assert(42 == reflect::get<"a">(f)); // by name
+static_assert(B  == reflect::get<"b">(f));
+
+// reflect::to
+constexpr auto t = reflect::to<std::tuple>(f);
+static_assert(42 == std::get<0>(t));
+static_assert(B  == std::get<1>(t));
+
+int main() {
+  reflect::for_each([](auto I) {
+    std::print("{}.{}:{}={} ({}/{}/{})\n",
+        reflect::type_name(f),                  // foo, foo
+        reflect::member_name<I>(f),             // a  , b
+        reflect::type_name(reflect::get<I>(f)), // int, E
+        reflect::get<I>(f),                     // 42 , B
+        reflect::size_of<I>(f),                 // 4  , 4
+        reflect::align_of<I>(f),                // 4  , 4
+        reflect::offset_of<I>(f));              // 0  , 4
+  }, f);
+}
+
+// and more (see API)...
+```
+
+---
+
+### Examples
+
+- [feature] Opt-in mixins - https://godbolt.org/z/sj7fYKoc3
+- [feature] Meta-programming (https://github.com/qlibs/mp) - https://godbolt.org/z/ds3KMGhqP
+- [future] Structured Bindings can introduce a Pack (https://wg21.link/P1061) - https://godbolt.org/z/Ga3bc3KKW
+- [performance] Minimal Perfect Hashing based `enum_name` (https://github.com/qlibs/mph) - https://godbolt.org/z/WM155vTfv
+
+---
+
+<a name="perf"></a>
+### Performance
+
+> Binary size (https://godbolt.org/z/7TbobjWfj)
+
+```cpp
+struct foo { int bar; };
+auto type_name(const foo& f) { return reflect::type_name(f); }
+```
+
+```asm
+type_name(foo const&): // $CXX -O3 -DNDEBUG
+  lea rdx, [rip + type_name<foo>]
+  mov eax, 3
+  ret
+
+type_name<foo>
+  .ascii  "foo"
+```
+
+```cpp
+struct foo { int bar; };
+auto member_name(const foo& f) { return reflect::member_name<0>(f); }
+```
+
+```asm
+member_name(foo const&): // $CXX -O3 -DNDEBUG
+  lea rdx, [rip + member_name<0ul, foo>]
+  mov eax, 3
+  ret
+
+member_name<0ul, foo>
+  .ascii  "bar"
+```
+
+```cpp
+enum class E { A, B, };
+auto enum_name(const E e) { return reflect::enum_name(e); }
+```
+
+```asm
+enum_name(E): // $CXX -O3 -DNDEBUG (generates switch)
+  xor     eax, eax
+  xor     ecx, ecx
+  cmp     edi, 1
+  sete    cl
+  lea     rdx, [rip + enum_name<0>]
+  cmove   rax, rdx
+  test    edi, edi
+  lea     rdx, [rip + enum_name<1>]
+  cmovne  rdx, rax
+  mov     eax, 1
+  cmovne  rax, rcx
+  ret
+
+enum_name<0ul>:
+  .ascii  "A"
+
+enum_name<1ul>:
+  .ascii  "B"
+```
+
+<a name="comp"></a>
+### Compilation times
+
+> [include] https://raw.githubusercontent.com/qlibs/reflect/main/reflect
+
+```cpp
+time g++-13.2 -x c++ -std=c++20 reflect -c -DNTEST   # 0.113s
+time g++-13.2 -x c++ -std=c++20 reflect -c           # 0.253s
+```
+
+```cpp
+time clang++-17 -x c++ -std=c++20 reflect -c -DNTEST # 0.119s
+time clang++-17 -x c++ -std=c++20 reflect -c         # 0.322s
+```
+
+---
+
+### API
+
+```cpp
+template <class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto visit(Fn&& fn, T&& t) noexcept;
+```
+
+```cpp
+struct foo { int a; int b; };
+static_assert(2 == visit([](auto&&... args) { return sizeof...(args); }, foo{}));
+```
+
+```cpp
+template<class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size() -> std::size_t;
+
+template<class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size(const T&) -> std::size_t;
+```
+
+```cpp
+struct foo { int a; int b; } f;
+static_assert(2 == size<foo>());
+static_assert(2 == size(f));
+```
+
+```cpp
+template <class T> [[nodiscard]] constexpr auto type_name() noexcept;
+template <class T> [[nodiscard]] constexpr auto type_name(const T&) noexcept;
+```
+
+```cpp
+struct foo { int a; int b; };
+static_assert(std::string_view{"foo"} == type_name<foo>());
+static_assert(std::string_view{"foo"} == type_name(foo{}));
+```
+
+```cpp
+template <class T> [[nodiscard]] constexpr auto type_id() noexcept;
+template <class T> [[nodiscard]] constexpr auto type_id(T&&) noexcept;
+```
+
+```cpp
+struct foo { };
+struct bar { };
+static_assert(type_id(foo{}) == type_id(foo{}));
+static_assert(type_id(bar{}) != type_id<foo>());
+```
+
+```cpp
+template<class E>
+[[nodiscard]] constexpr auto to_underlying(const E e) noexcept;
+
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_min(const E = {}) { return REFLECT_ENUM_MIN; }
+
+template<class E> requires std::is_enum_v<E>
+consteval auto enum_max(const E = {}) { return REFLECT_ENUM_MAX; }
+
+template<class E,
+         fixed_string unknown = "",
+         auto Min = enum_min(E{}),
+         auto Max = enum_max(E{})>
+  requires (std::is_enum_v<E> and Max > Min)
+[[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
+```
+
+```cpp
+enum class Enum { foo = 1, bar = 2 };
+static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
+static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
+```
+
+```cpp
+enum class Enum { foo = 1, bar = 1024 };
+consteval auto enum_min(Enum) { return Enum::foo; }
+consteval auto enum_max(Enum) { return Enum::bar; }
+
+static_assert(std::string_view{"foo"} == enum_name(Enum::foo));
+static_assert(std::string_view{"bar"} == enum_name(Enum::bar));
+```
+
+```cpp
+template <std::size_t N, class T>
+  requires (std::is_aggregate_v<T> and N < size<T>())
+[[nodiscard]] constexpr auto member_name(const T& = {}) noexcept;
+```
+
+```cpp
+struct foo { int a; int b; };
+static_assert(std::string_view{"a"} == member_name<0, foo>());
+static_assert(std::string_view{"a"} == member_name<0>(foo{}));
+static_assert(std::string_view{"b"} == member_name<1, foo>());
+static_assert(std::string_view{"b"} == member_name<1>(foo{}));
+```
+
+```cpp
+template<std::size_t N, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and
+            N < size<std::remove_cvref_t<T>>())
+[[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
+```
+
+```cpp
+struct foo { int a; bool b; };
+constexpr auto f = foo{.i=42, .b=true};
+static_assert(42 == get<0>(f));
+static_assert(true == get<1>(f));
+```
+
+```cpp
+template <class T, fixed_string Name> requires std::is_aggregate_v<T>
+concept has_member_name = /*unspecified*/
+```
+
+```cpp
+struct foo { int a; int b; };
+static_assert(has_member_name<foo, "a">);
+static_assert(has_member_name<foo, "b">);
+static_assert(not has_member_name<foo, "c">);
+```
+
+```cpp
+template<fixed_string Name, class T> requires has_member_name<T, Name>
+constexpr decltype(auto) get(T&& t) noexcept;
+```
+
+```cpp
+struct foo { int a; int b; };
+constexpr auto f = foo{.i=42, .b=true};
+static_assert(42 == get<"a">(f));
+static_assert(true == get<"b">(f));
+```
+
+```cpp
+template<fixed_string... Members, class TSrc, class TDst>
+  requires (std::is_aggregate_v<TSrc> and std::is_aggregate_v<TDst>)
+constexpr auto copy(const TSrc& src, TDst& dst) noexcept -> void;
+```
+
+```cpp
+struct foo { int a; int b; };
+struct bar { int a{}; int b{}; };
+
+bar b{};
+foo f{};
+
+copy(f, b);
+assert(b.a == f.a);
+assert(b.b == f.b);
+
+copy<"a">(f, b);
+assert(b.a == f.a);
+assert(0 == b.b);
+```
+
+```cpp
+template<template<class...> class R, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto to(T&& t) noexcept;
+```
+
+```cpp
+struct foo { int a; int b; };
+
+constexpr auto t = to<std::tuple>(foo{.a=4, .b=2});
+static_assert(4 == std::get<0>(t));
+static_assert(2 == std::get<1>(t));
+
+auto f = foo{.a=4, .b=2};
+auto t = to<std::tuple>(f);
+std::get<0>(t) *= 10;
+f.b = 42;
+assert(40 == std::get<0>(t) and 40 == f.a);
+assert(42 == std::get<1>(t) and 42 == f.b);
+```
+
+```cpp
+template<class R, class T>
+[[nodiscard]] constexpr auto to(T&& t);
+```
+
+```cpp
+struct foo { int a; int b; };
+struct baz { int a{}; int c{}; };
+
+const auto b = to<baz>(foo{.a=4, .b=2});
+assert(4 == b.a and 0 == b.c);
+```
+
+```cpp
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of(T&&) -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of(T&&) -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of() -> std::size_t;
+
+template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t;
+```
+
+```cpp
+struct foo { int a; bool b; };
+
+static_assert(4 == size_of<0, foo>());
+static_assert(1 == size_of<1, foo>());
+static_assert(4 == align_of<0, foo>());
+static_assert(1 == align_of<1, foo>());
+static_assert(0 == offset_of<0, foo>());
+static_assert(4 == offset_of<1, foo>());
+```
+
+```cpp
+template<class T, class Fn>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+constexpr auto for_each(Fn&& fn) -> void;
+
+template<class Fn, class T>
+  requires std::is_aggregate_v<std::remove_cvref_t<T>>
+constexpr auto for_each(Fn&& fn, T&& t) -> void;
+```
+
+```cpp
+struct { int a; int b; } f;
+
+reflect::for_each([&f](const auto I) {
+  std::print("{}:{}={}", member_name<I>(f), get<I>(f)); // prints a:int=4, b:int=2
+}, f);
+```
+
+> Configuration
+
+```cpp
+#define REFLECT_ENUM_MIN 0      // Min size for enum name (can be overridden)
+                                // For example: `-DREFLECT_ENUM_MIN=-1`
+#define REFLECT_ENUM_MAX 128    // Max size for enum name (can be overridden)
+                                // For example: `-DREFLECT_ENUM_MAX=32`
+```
+
+---
+
+### FAQ
+
+- How does `reflect` compare to https://wg21.link/P2996?
+
+    > `reflect` library only provides basic reflection primitives, mostly via hacks and workarounds to deal with lack of the reflection.
+    https://wg21.link/P2996 is a language proposal with many more features and capabilities.
+
+- How does `reflect` work under the hood?
+
+    > There are many different ways to implement reflection. `reflect` uses C++20's structure bindings, concepts and source_location to do it. See `visit` implementation for more details.
+
+- How can `reflect` be agnostic to compiler changes?
+
+    > `reflect` precomputes required prefixes/postfixes to find required names from the `source_location::function_name()` output for each compiler upon inclusion.
+    Any compiler change will end up with new prefixes/postfixes and wont require additional maintenance.
+
+- What does it mean that `reflect` tests itself upon include?
+
+    > `reflect` runs all tests (via static_asserts) upon include. If the include compiles it means all tests are passing and the library works correctly on given compiler, environment.
+
+- What is compile-time overhead of `reflect` library?
+
+    > `reflect` include takes ~.2s (that includes running all tests).
+    The most expensive calls are `visit` and `enum_to_name` whose timing will depend on the number of reflected elements and/or min/max values provided.
+    There are no recursive template instantiations in the library.
+
+- Can I disable running tests at compile-time for faster compilation times?
+
+    > When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+    Note: Use with caution as disabling tests means that there are no guarantees upon inclusion that the given compiler/env combination works as expected.
+
+- How to extend the number of members to be reflected (default: 64)?
+
+    > Override `visit`, for example - https://godbolt.org/z/Ga3bc3KKW
+
+    ```cpp
+    template <class Fn, class T> // requires https://wg21.link/P1061
+    [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t) noexcept {
+      auto&& [... ts] = std::forward<T>(t);
+      return std::forward<Fn>(fn)(std::forward_like<T>(ts)...);
+    }
+    ```
+
+- Similar projects?
+    > [boost.pfr](https://github.com/boostorg/pfr), [glaze](https://github.com/stephenberry/glaze), [reflect-cpp](https://github.com/getml/reflect-cpp), [magic_enum](https://github.com/Neargye/magic_enum)
+<!--
+#endif
+
+#pragma once
+
 #include <array>
 #include <string_view>
 #include <source_location>
 #include <type_traits>
 #include <tuple>
 #include <utility>
+#include <limits>
+#include <cstdint>
+
+#ifndef REFLECT_ENUM_MIN
+#define REFLECT_ENUM_MIN 0
 #endif
 
-#if not defined(REFLECT_ENUM_MIN)
-#define REFLECT_ENUM_MIN -1
-#endif
-
-#if not defined(REFLECT_ENUM_MAX)
-#define REFLECT_ENUM_MAX 1024
+#ifndef REFLECT_ENUM_MAX
+#define REFLECT_ENUM_MAX 128
 #endif
 
 namespace {
@@ -83,13 +525,11 @@ template<> struct REFLECT_FWD_LIKE<true> { template<class T> using type = std::r
 #define REFLECT_FWD_LIKE(T, ...) static_cast<typename ::REFLECT_FWD_LIKE<::std::is_lvalue_reference_v<T>>::template type<decltype(__VA_ARGS__)>>(__VA_ARGS__)
 struct  REFLECT_STRUCT { void* MEMBER; enum class ENUM { VALUE }; }; // has to be in the global namespace
 
-/**
- * Minimal static reflection library ($CXX -x c++ -std=c++20 -c reflect) [https://godbolt.org/z/M747ocGfx]
- */
-namespace reflect::inline v1_1_1 {
+namespace reflect::inline v1_2_5 {
 namespace detail {
 template<class T> extern const T ext{};
 struct any { template<class T> operator T() const noexcept; };
+template<class T> struct any_except_base_of { template<class U> requires (not std::is_base_of_v<U, T>) operator U() const noexcept; };
 template<auto...> struct auto_ { constexpr explicit(false) auto_(auto&&...) noexcept { } };
 template<class T> struct ref { T& ref_; };
 template<class T> ref(T&) -> ref<T>;
@@ -107,11 +547,11 @@ template<std::size_t N, class...Ts> requires (N < sizeof...(Ts))
 template<auto...  Vs> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 template<class... Ts> [[nodiscard]] constexpr auto function_name() noexcept -> std::string_view { return std::source_location::current().function_name(); }
 
-template<class>
+template<class T>
 struct type_name_info {
-  static constexpr auto name = function_name<void>();
-  static constexpr auto begin = name.find("void");
-  static constexpr auto end = name.substr(begin+std::size(std::string_view{"void"}));
+  static constexpr auto name = function_name<int>();
+  static constexpr auto begin = name.find("int");
+  static constexpr auto end = name.substr(begin+std::size(std::string_view{"int"}));
 };
 
 template<class T> requires std::is_class_v<T>
@@ -143,21 +583,26 @@ struct member_name_info {
 
 template<class T, std::size_t Size>
 struct fixed_string {
-  constexpr explicit(false) fixed_string(const T* str) { for (decltype(Size) i{}; i < Size; ++i) { data[i] = str[i]; } }
+  constexpr explicit(false) fixed_string(const T* str) {
+    for (decltype(Size) i{}; i < Size; ++i) { data[i] = str[i]; }
+    data[Size] = T();
+  }
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
   [[nodiscard]] constexpr explicit(false) operator std::string_view() const { return {std::data(data), Size}; }
   [[nodiscard]] constexpr auto size() const { return Size; }
-  std::array<T, Size> data{};
+  T data[Size + 1u];
 };
-template<class T, std::size_t Size> fixed_string(const T (&str)[Size]) -> fixed_string<T, Size-1>;
+template<class T, std::size_t Capacity, std::size_t Size = Capacity-1> fixed_string(const T (&str)[Capacity]) -> fixed_string<T, Size>;
 
 namespace detail {
-template<class T, class... Ts> requires std::is_aggregate_v<T>
+template<class T, std::size_t Bases = 0u, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
-    return sizeof...(Ts);
+    return sizeof...(Ts) - Bases;
+  } else if constexpr (Bases == sizeof...(Ts) and requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any_except_base_of<T>{}}; }) {
+    return size<T, Bases + 1u, Ts..., detail::any>();
   } else {
-    return size<T, Ts..., detail::any>();
+    return size<T, Bases, Ts..., detail::any>();
   }
 }
 } // namespace detail
@@ -242,7 +687,7 @@ template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn
 
 template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
-  #if __cpp_structured_bindings >= 202401L
+  #if (__cpp_structured_bindings >= 202601L)
     auto&& [... ts] = REFLECT_FWD(t);
     return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, ts)...);
   #else
@@ -255,7 +700,7 @@ template<class T>
   using type_name_info = detail::type_name_info<std::remove_pointer_t<std::remove_cvref_t<T>>>;
   constexpr std::string_view function_name = detail::function_name<std::remove_pointer_t<std::remove_cvref_t<T>>>();
   constexpr std::string_view qualified_type_name = function_name.substr(type_name_info::begin, function_name.find(type_name_info::end)-type_name_info::begin);
-  constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<"));
+  constexpr std::string_view tmp_type_name = qualified_type_name.substr(0, qualified_type_name.find_first_of("<", 1));
   constexpr std::string_view type_name = tmp_type_name.substr(tmp_type_name.find_last_of("::")+1);
   static_assert(std::size(type_name) > 0u);
   if (std::is_constant_evaluated()) {
@@ -277,32 +722,64 @@ template<class E>
 }
 
 namespace detail {
+template<auto V> consteval const auto& data() { return V.data; }
 template<class T, std::size_t Size>
 struct static_vector {
   constexpr static_vector() = default;
   constexpr auto push_back(const T& value) { values_[size_++] = value; }
-  [[nodiscard]] constexpr auto operator[](auto i) const { return values_[i]; }
+  [[nodiscard]] constexpr const auto& operator[](auto i) const { return values_[i]; }
+  [[nodiscard]] constexpr auto begin() const { return &values_[0]; }
+  [[nodiscard]] constexpr auto end() const { return &values_[0] + size_; }
   [[nodiscard]] constexpr auto size() const { return size_; }
+  [[nodiscard]] constexpr auto empty() const { return not size_; }
+  [[nodiscard]] constexpr auto capacity() const { return Size; }
   std::array<T, Size> values_{};
   std::size_t size_{};
 };
-
-#if defined(__clang__) and (__clang_major__ > 15)
+template<class E, auto N> requires std::is_enum_v<E>
+[[nodiscard]] constexpr auto enum_name() {
+  constexpr auto fn_name = function_name<static_cast<E>(N)>();
+  constexpr auto name = fn_name.substr(enum_name_info::begin, std::size(fn_name)-enum_name_info::end-enum_name_info::begin);
+  constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
+  static_assert(std::size(enum_name) > 0u);
+  return data<fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)}>();
+}
+#if defined(__clang__)
+#if (__clang_major__ > 15) and (__clang_major__ < 19)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
 template<class E, auto Min, auto Max> requires (std::is_enum_v<E> and Max > Min)
-constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
-  const auto names = detail::function_name<static_cast<E>(Ns+Min)...>();
-  const auto begin = detail::enum_name_info::begin;
-  const auto end = std::size(names)-detail::enum_name_info::end;
-  detail::static_vector<std::underlying_type_t<E>, sizeof...(Ns)> cases{};
+inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
+  static_vector<std::underlying_type_t<E>, sizeof...(Ns)> cases{};
+  ([&] {
+    if constexpr (requires { function_name<static_cast<E>(Ns+Min)>(); }) {
+      const auto fn_name = function_name<static_cast<E>(Ns+Min)>();
+      const auto name = fn_name.substr(enum_name_info::begin, std::size(fn_name)-enum_name_info::end-enum_name_info::begin);
+      const auto enum_name = name.substr(name.find_last_of("::")+1);
+      if (enum_name.find(")") == std::string_view::npos) {
+        cases.push_back(std::underlying_type_t<E>(Ns+Min));
+      }
+    }
+  }(), ...);
+  return cases;
+}(std::make_index_sequence<Max-Min+1/*inclusive*/>{});
+#if (__clang_major__ > 15) and (__clang_major__ < 19)
+  #pragma clang diagnostic pop
+#endif
+#else
+template<class E, auto Min, auto Max> requires (std::is_enum_v<E> and Max > Min)
+inline constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
+  const auto names = function_name<static_cast<E>(Ns+Min)...>();
+  const auto begin = enum_name_info::begin;
+  const auto end = std::size(names) - enum_name_info::end;
+  static_vector<std::underlying_type_t<E>, sizeof...(Ns)> cases{};
   std::underlying_type_t<E> index{};
   auto valid = true;
   for (auto i = begin; i < end; ++i) {
     if (names[i] == '(' and names[i+1] != ')') {
       valid = false;
-    } else if (names[i] == ' ' or names[i] == ':') {
+    } else if (names[i] == ' ') {
       valid = true;
     } else if (names[i] == ',' or i == end-1) {
       if (valid) { cases.push_back(index+Min); }
@@ -312,56 +789,49 @@ constexpr auto enum_cases = []<auto... Ns>(std::index_sequence<Ns...>) {
   }
   return cases;
 }(std::make_index_sequence<Max-Min+1/*inclusive*/>{});
-
-template<class E, auto N> requires std::is_enum_v<E>
-[[nodiscard]] constexpr auto enum_name () {
-  constexpr auto fn_name = detail::function_name<static_cast<E>(N)>();
-  constexpr auto name = fn_name.substr(detail::enum_name_info::begin, std::size(fn_name)-detail::enum_name_info::end-detail::enum_name_info::begin);
-  constexpr auto enum_name = name.substr(name.find_last_of("::")+1);
-  static_assert(std::size(enum_name) > 0u);
-  if (std::is_constant_evaluated()) {
-    return enum_name;
-  } else {
-    return [&] {
-      static constexpr const auto static_name = fixed_string<std::remove_cvref_t<decltype(enum_name[0])>, std::size(enum_name)>{std::data(enum_name)};
-      return std::string_view{static_name};
-    }();
-  }
-}
-#if defined(__clang__) and (__clang_major__ > 15)
-  #pragma clang diagnostic pop
 #endif
 } // namespace detail
 
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_min(const E) { return REFLECT_ENUM_MIN; }
+template<class E> requires std::is_enum_v<E> consteval auto enum_min(const E) -> int { return REFLECT_ENUM_MIN; }
+template<class E, class T = std::underlying_type_t<E>> requires std::is_enum_v<E> consteval auto enum_max(const E) -> int {
+  return std::numeric_limits<T>::max() < REFLECT_ENUM_MAX ? std::numeric_limits<T>::max() : REFLECT_ENUM_MAX;
+}
 
-template<class E> requires std::is_enum_v<E>
-consteval auto enum_max(const E) { return REFLECT_ENUM_MAX; }
+template<class E, int Min = enum_min(E{}), int Max = enum_max(E{}), auto enum_cases = detail::enum_cases<E, Min, Max>>
+inline constexpr auto enumerators = []<auto... Ns>(std::index_sequence<Ns...>) {
+  return std::array{std::pair{enum_cases[Ns], detail::enum_name<E, enum_cases[Ns]>()}...};
+}(std::make_index_sequence<enum_cases.size()>{});
 
 template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max = enum_max(E{})>
   requires (std::is_enum_v<E> and Max > Min)
 [[nodiscard]] constexpr auto enum_name(const E e) noexcept -> std::string_view {
-  if constexpr (constexpr auto enum_cases = detail::enum_cases<E, Min, Max>; std::size(enum_cases) > 0) {
-    const auto switch_case = [&]<auto I = 0>(auto switch_case, const auto value) -> std::string_view {
-      switch (value) {
-        case enum_cases[I]: {
-          return detail::enum_name<E, enum_cases[I]>();
-        }
-        default: {
-          if constexpr (I < std::size(enum_cases)-1) {
-            return switch_case.template operator()<I+1>(switch_case, value);
-          } else {
-            return unknown;
-          }
+  if constexpr (constexpr auto cases = enumerators<E, Min, Max>; std::empty(cases)) {
+    return unknown;
+  } else {
+    const auto switch_case = [&]<std::size_t I = 0u>(auto switch_case, const auto value) -> std::string_view {
+      if constexpr (I == std::size(cases)) {
+        return unknown;
+      } else {
+        switch (value) {
+          default:             return switch_case.template operator()<I + 1u>(switch_case, value);
+          case cases[I].first: return cases[I].second;
         }
       }
     };
     return switch_case(switch_case, to_underlying(e));
-  } else {
-    return unknown;
   }
 }
+
+/**
+ * @code
+ * static_assert(type_id_v<void> == type_id_v<void>);
+ * static_assert(type_id_v<int>  != type_id_v<void>);
+ * static_assert(type_id_v<int>  == type_id_v<int>);
+ * static_assert(type_id_v<int>  != type_id_v<const int&>);
+ * @endcode
+ */
+template<class...>
+inline constexpr auto type_id_v = []{};
 
 template<class T>
 [[nodiscard]] constexpr auto type_id() -> std::size_t {
@@ -399,10 +869,93 @@ template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(REFLECT_FWD(args)...); }, REFLECT_FWD(t));
 }
 
+template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())
+using member_type = std::remove_cvref_t<decltype(reflect::get<N>(std::declval<T&&>()))>;
+
+namespace detail {
+template<class T, auto Name>
+inline constexpr bool has_member_name_impl = []<auto... Ns>(std::index_sequence<Ns...>) {
+  return ((Name == member_name<Ns, T>()) or ...);
+}(std::make_index_sequence<size<T>()>{});
+
 template<class T, fixed_string Name>
-concept has_member_name = []<auto... Ns>(std::index_sequence<Ns...>) {
-  return ((std::string_view{Name} == std::string_view{member_name<Ns, std::remove_cvref_t<T>>()}) or ...);
-}(std::make_index_sequence<size<std::remove_cvref_t<T>>()>{});
+[[nodiscard]] consteval auto diagnose_member_name() {
+  constexpr std::string_view prefix = "`";
+  constexpr std::string_view type = type_name<T>();
+  if constexpr (size<T>()) {
+    constexpr std::string_view infix1 = "` has no data member named `";
+    constexpr std::string_view incorrect = Name;
+    constexpr std::string_view infix2 = "`. Did you mean `";
+    constexpr std::string_view correct = [] {
+      constexpr auto distance = [](std::string_view correct) {
+        constexpr std::string_view incorrect = Name;
+        std::array<std::size_t, incorrect.size() + 1> prev;
+        std::array<std::size_t, incorrect.size() + 1> curr{};
+        for (decltype(prev.size()) i{}; i < prev.size(); ++i) prev[i] = i;
+        for (decltype(correct.size()) i{}; i < correct.size(); ++i) {
+          curr[0] = i + 1;
+          for (decltype(incorrect.size()) j{}; j < incorrect.size(); ++j) {
+            const auto del = prev[j + 1] + 1;
+            const auto ins = curr[j] + 1;
+            const auto sub = prev[j] + (correct[i] != incorrect[j]);
+            const auto min_del_ins = del < ins ? del : ins;
+            curr[j + 1] = min_del_ins < sub ? min_del_ins : sub;
+          }
+          auto temp = curr;
+          curr = prev;
+          prev = temp;
+        }
+        return prev.back();
+      };
+      const auto member_names = []<auto... Ns>(std::index_sequence<Ns...>) {
+        return std::array<std::string_view, sizeof...(Ns)>{member_name<Ns, T>()...};
+      }(std::make_index_sequence<size<T>()>{});
+      auto closest_name = member_names[0];
+      auto min_distance = distance(closest_name);
+      for (decltype(member_names.size()) n{1}; n < member_names.size(); ++n) {
+        const auto nth_member_name = member_names[n];
+        const auto nth_distance = distance(nth_member_name);
+        if (nth_distance < min_distance) {
+          closest_name = nth_member_name;
+          min_distance = nth_distance;
+        }
+      }
+      return closest_name;
+    }();
+    constexpr std::string_view suffix = "`?";
+    char message[prefix.size() + type.size() + infix1.size() + incorrect.size() + infix2.size() + correct.size() + suffix.size() + 1];
+    auto out = message;
+    for (const auto c : prefix) *out++ = c;
+    for (const auto c : type) *out++ = c;
+    for (const auto c : infix1) *out++ = c;
+    for (const auto c : incorrect) *out++ = c;
+    for (const auto c : infix2) *out++ = c;
+    for (const auto c : correct) *out++ = c;
+    for (const auto c : suffix) *out++ = c;
+    *out = '\0';
+    return fixed_string{message};
+  } else {
+    constexpr std::string_view suffix = "` has no data members.";
+    char message[prefix.size() + type.size() + suffix.size() + 1];
+    auto out = message;
+    for (const auto c : prefix) *out++ = c;
+    for (const auto c : type) *out++ = c;
+    for (const auto c : suffix) *out++ = c;
+    *out = '\0';
+    return fixed_string{message};
+  }
+}
+
+template<auto Message>
+struct print { static constexpr auto value = false; };
+template<class TMessage>
+concept diagnosis = TMessage::value;
+template<class T, auto Name>
+concept member_name_diagnosis = diagnosis<print<diagnose_member_name<T, Name>()>>;
+} // namespace detail
+
+template<class T, fixed_string Name>
+concept has_member_name = detail::has_member_name_impl<std::remove_cvref_t<T>, Name> or detail::member_name_diagnosis<std::remove_cvref_t<T>, Name>;
 
 template<fixed_string Name, class T>
   requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
@@ -499,49 +1052,11 @@ constexpr auto for_each(Fn&& fn, T&&) -> void {
   }(std::make_index_sequence<reflect::size<std::remove_cvref_t<T>>()>{});
 }
 } // namespace reflect
-
-#if not defined(MP) and __has_include(<mp>)
-#define MP_META_INFO reflect_meta_info
-struct reflect_meta_info {
-  size_t (*size_of)();
-  std::string_view (*name)();
-  std::string_view (*type)();
-};
-#include <mp>
-template<class B, class R, class I>
-struct mp::detail::meta_info<B(R,I)> {
-  using value_type = R;
-
-  static constexpr reflect_meta_info info{
-    [] { return sizeof(R); },
-    [] { return reflect::member_name<I::value, B>(); },
-    [] { return reflect::type_name<R>(); }
-  };
-
-  constexpr auto friend get(meta_id<meta_t{&info}>) { return meta_info{}; }
-
-  template<class T> static constexpr decltype(auto) value_of(T&& t) {
-    return reflect::get<I::value>(static_cast<T&&>(t));
-  }
-};
-#endif
-
-#if defined(MP)
-namespace reflect::inline v1_1_1 {
-template<class T>
-[[nodiscard]] constexpr auto reflect(T&& t) {
-  return []<mp::size_t... Ns>(mp::utility::index_sequence<Ns...>) {
-    return mp::vector{mp::meta<T(decltype(reflect::get<Ns>(static_cast<T&&>(t))), std::integral_constant<decltype(Ns), Ns>)>...};
-  }(mp::utility::make_index_sequence<reflect::size<T>()>{});
-}
-} // namespace reflect
-#endif
-
 #undef REFLECT_FWD_LIKE
 #undef REFLECT_FWD
 
-#if not defined(DISABLE_STATIC_ASSERT_TESTS)
-namespace REFLECT_TEST {
+#ifndef NTEST
+namespace reflect::test {
 struct empty { };
 struct foo { using type = int; enum E { }; };
 template<class T> struct optional {
@@ -556,12 +1071,19 @@ enum e {
   _141 = 141,
   _142 = 142,
 };
+enum e1 { e1a };
+enum class e2 : std::uint8_t { e2a, e2b };
+enum e3 { e3a, e3b, e3c, };
+enum class e4 : std::int32_t { e4a, e4b = 5, e4c, e4d = 2, };
 consteval auto enum_min(e) { return e::_141; }
 consteval auto enum_max(e) { return e::_142; }
-} // REFLECT_TEST
+void failed();
+inline constexpr auto expect = [](bool cond) { if (not cond) { failed(); } };
+} // reflect::test
 
-static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[not cond]; }> {
+static_assert(([] {
   using namespace reflect;
+  using test::expect;
 
   // nth_pack_element
   {
@@ -609,7 +1131,15 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
   {
     struct empty {};
     struct one { int a; };
-    struct two { int a; REFLECT_TEST::optional<int> o; };
+    struct two { int a; reflect::test::optional<int> o; };
+    struct empty_with_base : empty {};
+    struct one_with_base : empty { int a; };
+    struct two_with_base : empty { int a; reflect::test::optional<int> o; };
+    struct base {};
+    struct empty_with_bases : empty, base {};
+    struct one_with_bases : empty, base { int a; };
+    struct two_with_bases : empty, base { int a; reflect::test::optional<int> o; };
+    struct two_with_base_member : empty, base { int a; base b; };
 
     static_assert(0 == size<empty>());
     static_assert(0 == size(empty{}));
@@ -617,15 +1147,36 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(1 == size(one{}));
     static_assert(2 == size<two>());
     static_assert(2 == size(two{}));
+    static_assert(0 == size<empty_with_base>());
+    static_assert(0 == size(empty_with_base{}));
+    static_assert(1 == size<one_with_base>());
+    static_assert(1 == size(one_with_base{}));
+    static_assert(2 == size<two_with_base>());
+    static_assert(2 == size(two_with_base{}));
+    static_assert(0 == size<empty_with_bases>());
+    static_assert(0 == size(empty_with_bases{}));
+    static_assert(1 == size<one_with_bases>());
+    static_assert(1 == size(one_with_bases{}));
+    static_assert(2 == size<two_with_bases>());
+    static_assert(2 == size(two_with_bases{}));
+    static_assert(2 == size<two_with_base_member>());
+    static_assert(2 == size(two_with_base_member{}));
     static_assert(0 == size<const empty>());
     static_assert(1 == size<const one>());
     static_assert(2 == size<const two>());
+    static_assert(0 == size<const empty_with_base>());
+    static_assert(1 == size<const one_with_base>());
+    static_assert(2 == size<const two_with_base>());
+    static_assert(0 == size<const empty_with_bases>());
+    static_assert(1 == size<const one_with_bases>());
+    static_assert(2 == size<const two_with_bases>());
+    static_assert(2 == size<const two_with_base_member>());
 
     struct non_standard_layout {
      private:
-        int _1{};
+        [[maybe_unused]] int _1{};
      public:
-        int _2{};
+        [[maybe_unused]] int _2{};
     };
 
     struct S {
@@ -710,7 +1261,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(2 == size(anonymous));
   }
 
-  // viist
+  // visit
   {
     struct empty {};
     static_assert(0 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, empty{}));
@@ -724,27 +1275,31 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
   // type_name
   {
+    struct local {};
+
     static_assert(std::string_view{"void"} == type_name<void>());
     static_assert(std::string_view{"int"} == type_name<int>());
-    static_assert(std::string_view{"empty"} == type_name<REFLECT_TEST::empty>());
-    static_assert(std::string_view{"empty"} == type_name(REFLECT_TEST::empty{}));
-    static_assert(std::string_view{"foo"} == type_name<REFLECT_TEST::foo>());
-    static_assert(std::string_view{"foo"} == type_name(REFLECT_TEST::foo{}));
-    static_assert(std::string_view{"bar"} == type_name<REFLECT_TEST::bar>());
-    static_assert(std::string_view{"bar"} == type_name(REFLECT_TEST::bar{}));
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<void>>());
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<int>>());
-    static_assert(std::string_view{"foo_t"} == type_name<REFLECT_TEST::foo_t<REFLECT_TEST::ns::bar_v<42>>>());
-    static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<42>>());
-    static_assert(std::string_view{"bar_v"} == type_name<REFLECT_TEST::ns::bar_v<>>());
-    static_assert(std::string_view{"int"} == type_name(REFLECT_TEST::foo::type{}));
-    static_assert(std::string_view{"E"} == type_name(REFLECT_TEST::foo::E{}));
+    static_assert(std::string_view{"empty"} == type_name<reflect::test::empty>());
+    static_assert(std::string_view{"empty"} == type_name(reflect::test::empty{}));
+    static_assert(std::string_view{"foo"} == type_name<reflect::test::foo>());
+    static_assert(std::string_view{"foo"} == type_name(reflect::test::foo{}));
+    static_assert(std::string_view{"bar"} == type_name<reflect::test::bar>());
+    static_assert(std::string_view{"bar"} == type_name(reflect::test::bar{}));
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<void>>());
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<int>>());
+    static_assert(std::string_view{"foo_t"} == type_name<reflect::test::foo_t<reflect::test::ns::bar_v<42>>>());
+    static_assert(std::string_view{"bar_v"} == type_name<reflect::test::ns::bar_v<42>>());
+    static_assert(std::string_view{"bar_v"} == type_name<reflect::test::ns::bar_v<>>());
+    static_assert(std::string_view{"int"} == type_name(reflect::test::foo::type{}));
+    static_assert(std::string_view{"E"} == type_name(reflect::test::foo::E{}));
+    static_assert(std::string_view{"local"} == type_name<local>());
+    static_assert(std::string_view{"local"} == type_name(local{}));
   }
 
   // type_id
   {
-    static_assert(type_id<REFLECT_TEST::bar>() != type_id(REFLECT_TEST::foo{}));
-    static_assert(type_id<int>() != type_id(REFLECT_TEST::foo{}));
+    static_assert(type_id<reflect::test::bar>() != type_id(reflect::test::foo{}));
+    static_assert(type_id<int>() != type_id(reflect::test::foo{}));
     static_assert(type_id<int>() != type_id<void>());
     static_assert(type_id<void>() != type_id<int>());
     static_assert(type_id<void>() == type_id<void>());
@@ -753,9 +1308,40 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(type_id<const int&>() == type_id<int&>());
     static_assert(type_id<void*>() == type_id<void>());
     static_assert(type_id<void*>() == type_id<void>());
-    static_assert(type_id<REFLECT_TEST::foo>() == type_id(REFLECT_TEST::foo{}));
-    static_assert(type_id<REFLECT_TEST::bar>() == type_id(REFLECT_TEST::bar{}));
+    static_assert(type_id<reflect::test::foo>() == type_id(reflect::test::foo{}));
+    static_assert(type_id<reflect::test::bar>() == type_id(reflect::test::bar{}));
   }
+
+  // type_id_v
+  {
+    static_assert(type_id_v<void> == type_id_v<void>);
+    static_assert(type_id_v<int>  != type_id_v<void>);
+    static_assert(type_id_v<int>  == type_id_v<int>);
+    static_assert(type_id_v<int>  != type_id_v<const int&>);
+  }
+
+  #ifndef _MSC_VER
+  // enumerators
+  {
+    static_assert(1u == enumerators<reflect::test::e1, 0, 1>.size());
+    static_assert(0u == enumerators<reflect::test::e1, 0, 1>[0].first);
+
+    static_assert(2u == enumerators<reflect::test::e2, 0, 2>.size());
+    static_assert(std::uint8_t(0) == enumerators<reflect::test::e2, 0, 2>[0].first);
+    static_assert(std::uint8_t(1) == enumerators<reflect::test::e2, 0, 2>[1].first);
+
+    static_assert(3u == enumerators<reflect::test::e3, 0, 3>.size());
+    static_assert(0u == enumerators<reflect::test::e3, 0, 3>[0].first);
+    static_assert(1u == enumerators<reflect::test::e3, 0, 3>[1].first);
+    static_assert(2u == enumerators<reflect::test::e3, 0, 3>[2].first);
+
+    static_assert(4u == enumerators<reflect::test::e4, 0, 6>.size());
+    static_assert(0 == enumerators<reflect::test::e4, 0, 6>[0].first);
+    static_assert(2 == enumerators<reflect::test::e4, 0, 6>[1].first);
+    static_assert(5 == enumerators<reflect::test::e4, 0, 6>[2].first);
+    static_assert(6 == enumerators<reflect::test::e4, 0, 6>[3].first);
+  }
+  #endif
 
   // enum_name
   {
@@ -779,7 +1365,6 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
         A = 0,
         B = 1,
       };
-
 
       static_assert([](const auto e) { return requires { enum_name<foobar,"",1,2>(e); }; }(foobar::foo));
       static_assert([](const auto e) { return requires { enum_name<mask,"",1,2>(e); }; }(mask::a));
@@ -808,8 +1393,8 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
       static_assert(std::string_view{"B"} == enum_name<negative,"<>",-1, 1>(negative::B));
       static_assert(std::string_view{"<>"} == enum_name<negative,"<>",-1, 1>(static_cast<negative>(-42)));
 
-      static_assert(std::string_view{"_141"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_141));
-      static_assert(std::string_view{"_142"} == enum_name<REFLECT_TEST::e>(REFLECT_TEST::e::_142));
+      static_assert(std::string_view{"_141"} == enum_name<reflect::test::e>(reflect::test::e::_141));
+      static_assert(std::string_view{"_142"} == enum_name<reflect::test::e>(reflect::test::e::_142));
   }
 
   // member_name
@@ -865,6 +1450,15 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     }
   }
 
+  // member_type
+  {
+    struct foo{ int i; float j; bool k; };
+
+    static_assert(std::is_same_v<int, member_type<0, foo>>);
+    static_assert(std::is_same_v<float, member_type<1, foo>>);
+    static_assert(std::is_same_v<bool, member_type<2, foo>>);
+  }
+
   // has_member_name
   {
     struct foo { int bar; };
@@ -872,6 +1466,19 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     static_assert(not has_member_name<foo, "baz">);
     static_assert(not has_member_name<foo, "BAR">);
     static_assert(not has_member_name<foo, "">);
+  }
+
+  // diagnose_member_name
+  {
+    struct foo { bool flag; int bar; };
+    static_assert(detail::diagnose_member_name<foo, "">() == "`foo` has no data member named ``. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "ba">() == "`foo` has no data member named `ba`. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "fl">() == "`foo` has no data member named `fl`. Did you mean `flag`?");
+    static_assert(detail::diagnose_member_name<foo, "baz">() == "`foo` has no data member named `baz`. Did you mean `bar`?");
+    static_assert(detail::diagnose_member_name<foo, "lag">() == "`foo` has no data member named `lag`. Did you mean `flag`?");
+
+    struct empty {};
+    static_assert(detail::diagnose_member_name<empty, "any">() == "`empty` has no data members.");
   }
 
   // get [by name]
@@ -1074,7 +1681,7 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
 
     struct foobar {
       int a{};
-      enum : int { } b; // strong type, type conversion disabled
+      enum e : int { } b; // strong type, type conversion disabled
     };
 
     {
@@ -1198,6 +1805,4 @@ static_assert(([]<auto expect = [](const bool cond) { return std::array{true}[no
     expect(f._1 == value[0] and f._2 == value[1]);
   }
 }(), true));
-#endif
-#endif  // REFLECT
-#endif
+#endif // NTEST

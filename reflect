@@ -487,8 +487,8 @@ reflect::for_each([&f](const auto I) {
 
 ### Resources
 
-> - https://wg21.link/P2996 (Reflection for C++26)
-> - https://wg21.link/P0385 (Static Reflection)
+> - Reflection for C++26 - https://wg21.link/P2996
+> - Static Reflection - https://wg21.link/P0385
 
 ### License
 

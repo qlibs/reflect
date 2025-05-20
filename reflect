@@ -93,11 +93,11 @@ static_assert(B  == std::get<1>(t));
 
 int main() {
   reflect::for_each([](auto I) {
-    std::print("{}.{}:{}={} ({}/{}/{})\n",
+    std::println("{}.{}:{}={} ({}/{}/{})",
       reflect::type_name(f),                  // foo, foo
       reflect::member_name<I>(f),             // a  , b
       reflect::type_name(reflect::get<I>(f)), // int, E
-      reflect::get<I>(f),                     // 42 , B
+      int(reflect::get<I>(f)),                // 42 , B
       reflect::size_of<I>(f),                 // 4  , 4
       reflect::align_of<I>(f),                // 4  , 4
       reflect::offset_of<I>(f));              // 0  , 4

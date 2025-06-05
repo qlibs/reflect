@@ -1028,7 +1028,7 @@ template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_
   } else {
     constexpr auto offset = offset_of<N-1, T>() + size_of<N-1, T>();
     constexpr auto alignment = std::min(alignof(T), align_of<N, T>());
-    constexpr auto padding = offset % alignment;
+    constexpr auto padding = offset % alignment == 0 ? 0 : alignment - (offset % alignment);
     return offset + padding;
   }
 }
@@ -1756,23 +1756,23 @@ static_assert(([] {
       char c;
     };
 
-    static_assert(offset_of<0, a>() == 0);
-    static_assert(offset_of<1, a>() == sizeof(int));
-    static_assert(offset_of<0, b>() == 0);
-    static_assert(offset_of<1, b>() == sizeof(int));
-    static_assert(offset_of<0, s>() == 0);
-    static_assert(offset_of<1, s>() == sizeof(float));
-    static_assert(offset_of<2, s>() == sizeof(float) + sizeof(char));
-    static_assert(offset_of<3, s>() == alignof(s)*2);
-    static_assert(offset_of<0, s2>() == 0);
-    static_assert(offset_of<1, s2>() == sizeof(float));
-    static_assert(offset_of<2, s2>() == sizeof(float) + sizeof(char));
-    static_assert(offset_of<3, s2>() == sizeof(float) + sizeof(char) + sizeof(char));
-    static_assert(offset_of<4, s2>() == sizeof(float) + sizeof(char) + sizeof(char) + sizeof(int));
-    static_assert(offset_of<5, s2>() == sizeof(float) + sizeof(char) + sizeof(char) + sizeof(int) + sizeof(double));
-    static_assert(offset_of<0, al>() == 0);
-    static_assert(offset_of<1, al>() == sizeof(char)*2);
-    static_assert(offset_of<2, al>() == sizeof(char)*2 + sizeof(int));
+    static_assert(offset_of<0, a>() == offsetof(a, i));
+    static_assert(offset_of<1, a>() == offsetof(a, j));
+    static_assert(offset_of<0, b>() == offsetof(b, i));
+    static_assert(offset_of<1, b>() == offsetof(b, k));
+    static_assert(offset_of<0, s>() == offsetof(s, a));
+    static_assert(offset_of<1, s>() == offsetof(s, b));
+    static_assert(offset_of<2, s>() == offsetof(s, bb));
+    static_assert(offset_of<3, s>() == offsetof(s, c));
+    static_assert(offset_of<0, s2>() == offsetof(s2, a));
+    static_assert(offset_of<1, s2>() == offsetof(s2, b));
+    static_assert(offset_of<2, s2>() == offsetof(s2, bb));
+    static_assert(offset_of<3, s2>() == offsetof(s2, c));
+    static_assert(offset_of<4, s2>() == offsetof(s2, d));
+    static_assert(offset_of<5, s2>() == offsetof(s2, e));
+    static_assert(offset_of<0, al>() == offsetof(al, a));
+    static_assert(offset_of<1, al>() == offsetof(al, b));
+    static_assert(offset_of<2, al>() == offsetof(al, c));
   }
 
   // for_each

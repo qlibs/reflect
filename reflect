@@ -595,6 +595,20 @@ struct fixed_string {
 template<class T, std::size_t Capacity, std::size_t Size = Capacity-1> fixed_string(const T (&str)[Capacity]) -> fixed_string<T, Size>;
 
 namespace detail {
+template<typename>
+struct is_unnamed_record_type : std::false_type {};
+template<typename...Ts>
+struct is_unnamed_record_type<std::pair<Ts...>> : std::true_type {};
+template<typename...Ts>
+struct is_unnamed_record_type<std::tuple<Ts...>> : std::true_type {};
+}
+template<typename T>
+constexpr bool is_unnamed_record_type_v = detail::is_unnamed_record_type<T>::value;
+
+template<typename T>
+constexpr bool is_record_like_type_v = std::is_aggregate_v<T> or detail::is_unnamed_record_type<T>::value;
+
+namespace detail {
 template<class T, std::size_t Bases = 0u, class... Ts> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size() -> std::size_t {
   if constexpr (requires { T{Ts{}...}; } and not requires { T{Ts{}..., detail::any{}}; }) {
@@ -612,9 +626,19 @@ template<class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
   return detail::size<std::remove_cvref_t<T>>();
 }
 
+template<class T> requires is_unnamed_record_type_v<std::remove_cvref_t<T>>
+[[nodiscard]] constexpr auto size() -> std::size_t {
+  return std::tuple_size_v<std::remove_cvref_t<T>>;
+}
+
 template<class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size(const T&) -> std::size_t {
   return detail::size<T>();
+}
+
+template<class T> requires is_unnamed_record_type_v<T>
+[[nodiscard]] constexpr auto size(const T&) -> std::size_t {
+  return std::tuple_size_v<T>;
 }
 
 namespace detail {
@@ -685,7 +709,7 @@ template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn
 template<class Fn, class T> [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, std::integral_constant<std::size_t, 64>) noexcept { auto&& [_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64] = REFLECT_FWD(t); return REFLECT_FWD(fn)(REFLECT_FWD_LIKE(T, _1), REFLECT_FWD_LIKE(T, _2), REFLECT_FWD_LIKE(T, _3), REFLECT_FWD_LIKE(T, _4), REFLECT_FWD_LIKE(T, _5), REFLECT_FWD_LIKE(T, _6), REFLECT_FWD_LIKE(T, _7), REFLECT_FWD_LIKE(T, _8), REFLECT_FWD_LIKE(T, _9), REFLECT_FWD_LIKE(T, _10), REFLECT_FWD_LIKE(T, _11), REFLECT_FWD_LIKE(T, _12), REFLECT_FWD_LIKE(T, _13), REFLECT_FWD_LIKE(T, _14), REFLECT_FWD_LIKE(T, _15), REFLECT_FWD_LIKE(T, _16), REFLECT_FWD_LIKE(T, _17), REFLECT_FWD_LIKE(T, _18), REFLECT_FWD_LIKE(T, _19), REFLECT_FWD_LIKE(T, _20), REFLECT_FWD_LIKE(T, _21), REFLECT_FWD_LIKE(T, _22), REFLECT_FWD_LIKE(T, _23), REFLECT_FWD_LIKE(T, _24), REFLECT_FWD_LIKE(T, _25), REFLECT_FWD_LIKE(T, _26), REFLECT_FWD_LIKE(T, _27), REFLECT_FWD_LIKE(T, _28), REFLECT_FWD_LIKE(T, _29), REFLECT_FWD_LIKE(T, _30), REFLECT_FWD_LIKE(T, _31), REFLECT_FWD_LIKE(T, _32), REFLECT_FWD_LIKE(T, _33), REFLECT_FWD_LIKE(T, _34), REFLECT_FWD_LIKE(T, _35), REFLECT_FWD_LIKE(T, _36), REFLECT_FWD_LIKE(T, _37), REFLECT_FWD_LIKE(T, _38), REFLECT_FWD_LIKE(T, _39), REFLECT_FWD_LIKE(T, _40), REFLECT_FWD_LIKE(T, _41), REFLECT_FWD_LIKE(T, _42), REFLECT_FWD_LIKE(T, _43), REFLECT_FWD_LIKE(T, _44), REFLECT_FWD_LIKE(T, _45), REFLECT_FWD_LIKE(T, _46), REFLECT_FWD_LIKE(T, _47), REFLECT_FWD_LIKE(T, _48), REFLECT_FWD_LIKE(T, _49), REFLECT_FWD_LIKE(T, _50), REFLECT_FWD_LIKE(T, _51), REFLECT_FWD_LIKE(T, _52), REFLECT_FWD_LIKE(T, _53), REFLECT_FWD_LIKE(T, _54), REFLECT_FWD_LIKE(T, _55), REFLECT_FWD_LIKE(T, _56), REFLECT_FWD_LIKE(T, _57), REFLECT_FWD_LIKE(T, _58), REFLECT_FWD_LIKE(T, _59), REFLECT_FWD_LIKE(T, _60), REFLECT_FWD_LIKE(T, _61), REFLECT_FWD_LIKE(T, _62), REFLECT_FWD_LIKE(T, _63), REFLECT_FWD_LIKE(T, _64)); }
 } // namespace detail
 
-template<class Fn, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
+template<class Fn, class T> requires is_record_like_type_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr decltype(auto) visit(Fn&& fn, T&& t, auto...) noexcept {
   #if (__cpp_structured_bindings >= 202601L)
     auto&& [... ts] = REFLECT_FWD(t);
@@ -864,12 +888,12 @@ template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T
   return member_name<N, T>();
 }
 
-template<std::size_t N, class T> requires (std::is_aggregate_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>())
+template<std::size_t N, class T> requires (is_record_like_type_v<std::remove_cvref_t<T>> and N < size<std::remove_cvref_t<T>>())
 [[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept {
   return visit([](auto&&... args) -> decltype(auto) { return detail::nth_pack_element<N>(REFLECT_FWD(args)...); }, REFLECT_FWD(t));
 }
 
-template<std::size_t N, class T> requires (std::is_aggregate_v<T> and N < size<T>())
+template<std::size_t N, class T> requires (is_record_like_type_v<T> and N < size<T>())
 using member_type = std::remove_cvref_t<decltype(reflect::get<N>(std::declval<T&&>()))>;
 
 namespace detail {
@@ -1140,6 +1164,9 @@ static_assert(([] {
     struct one_with_bases : empty, base { int a; };
     struct two_with_bases : empty, base { int a; reflect::test::optional<int> o; };
     struct two_with_base_member : empty, base { int a; base b; };
+    using tuple_with_values = std::tuple<int, int, int>;
+    using tuple_with_refs = std::tuple<int const&, int &, int *>;
+    using pair_test = std::pair<float, std::string>;
 
     static_assert(0 == size<empty>());
     static_assert(0 == size(empty{}));
@@ -1171,6 +1198,10 @@ static_assert(([] {
     static_assert(1 == size<const one_with_bases>());
     static_assert(2 == size<const two_with_bases>());
     static_assert(2 == size<const two_with_base_member>());
+    static_assert(3 == reflect::size<tuple_with_values>());
+    static_assert(3 == reflect::size<tuple_with_values>());
+    static_assert(3 == reflect::size<tuple_with_refs>());
+    static_assert(2 == reflect::size<pair_test>());
 
     struct non_standard_layout {
      private:
@@ -1271,6 +1302,9 @@ static_assert(([] {
 
     struct two { int a; int b; };
     static_assert(2 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, two{}));
+
+    using ts = std::tuple<int,float,double>;
+    static_assert(3 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, ts{}));
   }
 
   // type_name
@@ -1294,6 +1328,7 @@ static_assert(([] {
     static_assert(std::string_view{"E"} == type_name(reflect::test::foo::E{}));
     static_assert(std::string_view{"local"} == type_name<local>());
     static_assert(std::string_view{"local"} == type_name(local{}));
+    static_assert(std::string_view{"tuple"} == type_name(std::tuple<int,int>{}));
   }
 
   // type_id
@@ -1448,6 +1483,18 @@ static_assert(([] {
         static_assert(std::is_same_v<decltype(get<0>(foo{})), int&&>);
       }
     }
+
+    {
+      using tuple_foo = std::tuple<int, bool>;
+      {
+        auto f = tuple_foo{};
+        auto value0 = get<0>(f);
+        static_assert(std::is_same_v<decltype(value0), int>);
+
+        auto value1 = get<1>(f);
+        static_assert(std::is_same_v<decltype(value1), bool>);
+      }
+    }
   }
 
   // member_type
@@ -1457,6 +1504,12 @@ static_assert(([] {
     static_assert(std::is_same_v<int, member_type<0, foo>>);
     static_assert(std::is_same_v<float, member_type<1, foo>>);
     static_assert(std::is_same_v<bool, member_type<2, foo>>);
+  }
+  {
+    using tuple_foo = std::tuple<int, bool>;
+
+    static_assert(std::is_same_v<int, member_type<0, tuple_foo>>);
+    static_assert(std::is_same_v<bool, member_type<1, tuple_foo>>);
   }
 
   // has_member_name

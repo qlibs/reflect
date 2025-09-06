@@ -1488,10 +1488,10 @@ static_assert(([] {
       using tuple_foo = std::tuple<int, bool>;
       {
         auto f = tuple_foo{};
-        auto value0 = get<0>(f);
+        [[maybe_unused]] auto value0 = get<0>(f);
         static_assert(std::is_same_v<decltype(value0), int>);
 
-        auto value1 = get<1>(f);
+        [[maybe_unused]] auto value1 = get<1>(f);
         static_assert(std::is_same_v<decltype(value1), bool>);
       }
     }

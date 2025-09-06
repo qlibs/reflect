@@ -1045,16 +1045,33 @@ template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_
   return align_of<N, std::remove_cvref_t<T>>();
 }
 
+namespace detail {
+template <class T>
+union uninitialized {
+  char bytes[sizeof(T)];
+  T value;
+};
+} // namespace detail
+
 template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto offset_of() -> std::size_t {
-  if constexpr (not N) {
-    return {};
-  } else {
-    constexpr auto offset = offset_of<N-1, T>() + size_of<N-1, T>();
-    constexpr auto alignment = std::min(alignof(T), align_of<N, T>());
-    constexpr auto padding = offset % alignment == 0 ? 0 : alignment - (offset % alignment);
-    return offset + padding;
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
+  const auto& unknown = detail::ext<detail::uninitialized<T>>;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+  const void* address = __builtin_addressof(get<N>(unknown.value));
+  for (std::size_t i = 0; i < sizeof(unknown.bytes); ++i) {
+    if (address == &unknown.bytes[i]) {
+      return i;
+    }
   }
+#if defined(__clang__)
+  __builtin_unreachable();
+#endif
 }
 
 template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
@@ -1153,7 +1170,7 @@ static_assert(([] {
 
   // size
   {
-    struct empty {};
+    using test::empty;
     struct one { int a; };
     struct two { int a; reflect::test::optional<int> o; };
     struct empty_with_base : empty {};
@@ -1294,7 +1311,7 @@ static_assert(([] {
 
   // visit
   {
-    struct empty {};
+    using test::empty;
     static_assert(0 == visit([]([[maybe_unused]] auto&&... args) { return sizeof...(args); }, empty{}));
 
     struct one { int a; };
@@ -1530,7 +1547,7 @@ static_assert(([] {
     static_assert(detail::diagnose_member_name<foo, "baz">() == "`foo` has no data member named `baz`. Did you mean `bar`?");
     static_assert(detail::diagnose_member_name<foo, "lag">() == "`foo` has no data member named `lag`. Did you mean `flag`?");
 
-    struct empty {};
+    using test::empty;
     static_assert(detail::diagnose_member_name<empty, "any">() == "`empty` has no data members.");
   }
 
@@ -1809,23 +1826,35 @@ static_assert(([] {
       char c;
     };
 
-    static_assert(offset_of<0, a>() == offsetof(a, i));
-    static_assert(offset_of<1, a>() == offsetof(a, j));
-    static_assert(offset_of<0, b>() == offsetof(b, i));
-    static_assert(offset_of<1, b>() == offsetof(b, k));
-    static_assert(offset_of<0, s>() == offsetof(s, a));
-    static_assert(offset_of<1, s>() == offsetof(s, b));
-    static_assert(offset_of<2, s>() == offsetof(s, bb));
-    static_assert(offset_of<3, s>() == offsetof(s, c));
-    static_assert(offset_of<0, s2>() == offsetof(s2, a));
-    static_assert(offset_of<1, s2>() == offsetof(s2, b));
-    static_assert(offset_of<2, s2>() == offsetof(s2, bb));
-    static_assert(offset_of<3, s2>() == offsetof(s2, c));
-    static_assert(offset_of<4, s2>() == offsetof(s2, d));
-    static_assert(offset_of<5, s2>() == offsetof(s2, e));
-    static_assert(offset_of<0, al>() == offsetof(al, a));
-    static_assert(offset_of<1, al>() == offsetof(al, b));
-    static_assert(offset_of<2, al>() == offsetof(al, c));
+    using test::empty;
+
+    struct p {
+      int i;
+#ifdef _MSC_VER
+      [[msvc::no_unique_address]] empty e;
+#else
+      [[no_unique_address]] empty e;
+#endif
+    };
+
+    static_assert(offset_of<0, a>() == __builtin_offsetof(a, i));
+    static_assert(offset_of<1, a>() == __builtin_offsetof(a, j));
+    static_assert(offset_of<0, b>() == __builtin_offsetof(b, i));
+    static_assert(offset_of<1, b>() == __builtin_offsetof(b, k));
+    static_assert(offset_of<0, s>() == __builtin_offsetof(s, a));
+    static_assert(offset_of<1, s>() == __builtin_offsetof(s, b));
+    static_assert(offset_of<2, s>() == __builtin_offsetof(s, bb));
+    static_assert(offset_of<3, s>() == __builtin_offsetof(s, c));
+    static_assert(offset_of<0, s2>() == __builtin_offsetof(s2, a));
+    static_assert(offset_of<1, s2>() == __builtin_offsetof(s2, b));
+    static_assert(offset_of<2, s2>() == __builtin_offsetof(s2, bb));
+    static_assert(offset_of<3, s2>() == __builtin_offsetof(s2, c));
+    static_assert(offset_of<4, s2>() == __builtin_offsetof(s2, d));
+    static_assert(offset_of<5, s2>() == __builtin_offsetof(s2, e));
+    static_assert(offset_of<0, al>() == __builtin_offsetof(al, a));
+    static_assert(offset_of<1, al>() == __builtin_offsetof(al, b));
+    static_assert(offset_of<2, al>() == __builtin_offsetof(al, c));
+    static_assert(offset_of<1, p>() == __builtin_offsetof(p, e));
   }
 
   // for_each

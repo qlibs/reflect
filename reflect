@@ -295,7 +295,7 @@ template<std::size_t N, class T>
 ```
 
 ```cpp
-struct foo { int a; bool b; };
+struct foo { int i; bool b; };
 constexpr auto f = foo{.i=42, .b=true};
 static_assert(42 == get<0>(f));
 static_assert(true == get<1>(f));
@@ -314,14 +314,30 @@ static_assert(not has_member_name<foo, "c">);
 ```
 
 ```cpp
-template<fixed_string Name, class T> requires has_member_name<T, Name>
-constexpr decltype(auto) get(T&& t) noexcept;
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto index_of() noexcept -> std::size_t;
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto index_of(T&&) noexcept -> std::size_t;
 ```
 
 ```cpp
 struct foo { int a; int b; };
+static_assert(0 == index_of<"a", foo>());
+static_assert(1 == index_of<"b">(foo{}));
+```
+
+```cpp
+template<fixed_string Name, class T> requires has_member_name<T, Name>
+[[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept;
+```
+
+```cpp
+struct foo { int i; bool b; };
 constexpr auto f = foo{.i=42, .b=true};
-static_assert(42 == get<"a">(f));
+static_assert(42 == get<"i">(f));
 static_assert(true == get<"b">(f));
 ```
 
@@ -388,10 +404,22 @@ template<std::size_t N, class T> requires std::is_aggregate_v<T>
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto size_of(T&&) -> std::size_t;
 
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of() -> std::size_t;
+
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto size_of(T&&) -> std::size_t;
+
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto align_of() -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of(T&&) -> std::size_t;
+
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto align_of() -> std::size_t;
+
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto align_of(T&&) -> std::size_t;
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
@@ -399,17 +427,26 @@ template<std::size_t N, class T> requires std::is_aggregate_v<T>
 
 template<std::size_t N, class T> requires std::is_aggregate_v<T>
 [[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t;
+
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of() -> std::size_t;
+
+template<fixed_string Name, class T> requires std::is_aggregate_v<T>
+[[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t;
 ```
 
 ```cpp
-struct foo { int a; bool b; };
+struct foo { int a; bool b; short c; };
 
 static_assert(4 == size_of<0, foo>());
 static_assert(1 == size_of<1, foo>());
+static_assert(2 == size_of<"c", foo>());
 static_assert(4 == align_of<0, foo>());
 static_assert(1 == align_of<1, foo>());
+static_assert(2 == align_of<"c", foo>());
 static_assert(0 == offset_of<0, foo>());
 static_assert(4 == offset_of<1, foo>());
+static_assert(6 == offset_of<"c", foo>());
 ```
 
 ```cpp
@@ -979,13 +1016,22 @@ concept has_member_name = detail::has_member_name_impl<std::remove_cvref_t<T>, N
 
 template<fixed_string Name, class T>
   requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
-constexpr decltype(auto) get(T&& t) noexcept {
-  return visit([](auto&&... args) -> decltype(auto) {
-    constexpr auto index = []<auto... Ns>(std::index_sequence<Ns...>){
-      return (((std::string_view{Name} == member_name<Ns, std::remove_cvref_t<T>>()) ? Ns : decltype(Ns){}) + ...);
-    }(std::make_index_sequence<size<std::remove_cvref_t<T>>()>{});
-    return detail::nth_pack_element<index>(REFLECT_FWD(args)...);
-  }, REFLECT_FWD(t));
+[[nodiscard]] constexpr auto index_of() noexcept -> std::size_t {
+  return []<auto... Ns>(std::index_sequence<Ns...>){
+    return (((std::string_view{Name} == member_name<Ns, std::remove_cvref_t<T>>()) ? Ns : decltype(Ns){}) + ...);
+  }(std::make_index_sequence<size<std::remove_cvref_t<T>>()>{});
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto index_of(T&&) noexcept -> std::size_t {
+  return index_of<Name, std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr decltype(auto) get(T&& t) noexcept {
+  return visit(detail::nth_pack_element_impl<index_of<Name, std::remove_cvref_t<T>>()>, REFLECT_FWD(t));
 }
 
 template<template<class...> class R, class T>
@@ -1031,6 +1077,18 @@ template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_
   return size_of<N, std::remove_cvref_t<T>>();
 }
 
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto size_of() -> std::size_t {
+  return size_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto size_of(T&&) -> std::size_t {
+  return size_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
+}
+
 template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto align_of() -> std::size_t {
   return alignof(std::remove_cvref_t<decltype(get<N>(detail::ext<T>))>);
@@ -1039,6 +1097,18 @@ template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_
 template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto align_of(T&&) -> std::size_t {
   return align_of<N, std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto align_of() -> std::size_t {
+  return align_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto align_of(T&&) -> std::size_t {
+  return align_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
 }
 
 namespace detail {
@@ -1073,6 +1143,18 @@ template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_
 template<std::size_t N, class T> requires std::is_aggregate_v<std::remove_cvref_t<T>>
 [[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t {
   return offset_of<N, std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto offset_of() -> std::size_t {
+  return offset_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
+}
+
+template<fixed_string Name, class T>
+  requires (std::is_aggregate_v<std::remove_cvref_t<T>> and has_member_name<std::remove_cvref_t<T>, Name>)
+[[nodiscard]] constexpr auto offset_of(T&&) -> std::size_t {
+  return offset_of<index_of<Name, std::remove_cvref_t<T>>(), std::remove_cvref_t<T>>();
 }
 
 template<class T, class Fn> requires std::is_aggregate_v<std::remove_cvref_t<T>>
@@ -1547,6 +1629,13 @@ static_assert(([] {
     static_assert(detail::diagnose_member_name<empty, "any">() == "`empty` has no data members.");
   }
 
+  // index_of
+  {
+    struct foo { int a; int b; };
+    static_assert(0 == index_of<"a", foo>());
+    static_assert(1 == index_of<"b">(foo{}));
+  }
+
   // get [by name]
   {
     struct foo { int i; bool b; };
@@ -1769,6 +1858,10 @@ static_assert(([] {
     static_assert(sizeof(char) == size_of<1, s>());
     static_assert(sizeof(char) == size_of<2, s>());
     static_assert(sizeof(int) == size_of<3, s>());
+    static_assert(sizeof(float) == size_of<"a", s>());
+    static_assert(sizeof(char) == size_of<"b", s>());
+    static_assert(sizeof(char) == size_of<"bb", s>());
+    static_assert(sizeof(int) == size_of<"c", s>());
   }
 
   // align_of
@@ -1784,6 +1877,10 @@ static_assert(([] {
     static_assert(alignof(char) == align_of<1, s>());
     static_assert(alignof(char) == align_of<2, s>());
     static_assert(alignof(int) == align_of<3, s>());
+    static_assert(alignof(float) == align_of<"a", s>());
+    static_assert(alignof(char) == align_of<"b", s>());
+    static_assert(alignof(char) == align_of<"bb", s>());
+    static_assert(alignof(int) == align_of<"c", s>());
   }
 
   // offset_of
@@ -1835,22 +1932,40 @@ static_assert(([] {
 
     static_assert(offset_of<0, a>() == __builtin_offsetof(a, i));
     static_assert(offset_of<1, a>() == __builtin_offsetof(a, j));
+    static_assert(offset_of<"i", a>() == __builtin_offsetof(a, i));
+    static_assert(offset_of<"j", a>() == __builtin_offsetof(a, j));
     static_assert(offset_of<0, b>() == __builtin_offsetof(b, i));
     static_assert(offset_of<1, b>() == __builtin_offsetof(b, k));
+    static_assert(offset_of<"i", b>() == __builtin_offsetof(b, i));
+    static_assert(offset_of<"k", b>() == __builtin_offsetof(b, k));
     static_assert(offset_of<0, s>() == __builtin_offsetof(s, a));
     static_assert(offset_of<1, s>() == __builtin_offsetof(s, b));
     static_assert(offset_of<2, s>() == __builtin_offsetof(s, bb));
     static_assert(offset_of<3, s>() == __builtin_offsetof(s, c));
+    static_assert(offset_of<"a", s>() == __builtin_offsetof(s, a));
+    static_assert(offset_of<"b", s>() == __builtin_offsetof(s, b));
+    static_assert(offset_of<"bb", s>() == __builtin_offsetof(s, bb));
+    static_assert(offset_of<"c", s>() == __builtin_offsetof(s, c));
     static_assert(offset_of<0, s2>() == __builtin_offsetof(s2, a));
     static_assert(offset_of<1, s2>() == __builtin_offsetof(s2, b));
     static_assert(offset_of<2, s2>() == __builtin_offsetof(s2, bb));
     static_assert(offset_of<3, s2>() == __builtin_offsetof(s2, c));
     static_assert(offset_of<4, s2>() == __builtin_offsetof(s2, d));
     static_assert(offset_of<5, s2>() == __builtin_offsetof(s2, e));
+    static_assert(offset_of<"a", s2>() == __builtin_offsetof(s2, a));
+    static_assert(offset_of<"b", s2>() == __builtin_offsetof(s2, b));
+    static_assert(offset_of<"bb", s2>() == __builtin_offsetof(s2, bb));
+    static_assert(offset_of<"c", s2>() == __builtin_offsetof(s2, c));
+    static_assert(offset_of<"d", s2>() == __builtin_offsetof(s2, d));
+    static_assert(offset_of<"e", s2>() == __builtin_offsetof(s2, e));
     static_assert(offset_of<0, al>() == __builtin_offsetof(al, a));
     static_assert(offset_of<1, al>() == __builtin_offsetof(al, b));
     static_assert(offset_of<2, al>() == __builtin_offsetof(al, c));
+    static_assert(offset_of<"a", al>() == __builtin_offsetof(al, a));
+    static_assert(offset_of<"b", al>() == __builtin_offsetof(al, b));
+    static_assert(offset_of<"c", al>() == __builtin_offsetof(al, c));
     static_assert(offset_of<1, p>() == __builtin_offsetof(p, e));
+    static_assert(offset_of<"e", p>() == __builtin_offsetof(p, e));
   }
 
   // for_each
